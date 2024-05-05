@@ -44,6 +44,8 @@ import utils.optim_step as opstep
 import utils.hnet_regularizer as hreg
 from utils.torch_utils import get_optimizer
 
+DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
+
 def test(task_id, data, mnet, hnet, device, shared, config, writer, logger,
          train_iter=None, task_emb=None, cl_scenario=None, test_size=None):
     """Evaluate the current performance using the test set.
@@ -742,7 +744,7 @@ def run(config, experiment='resnet'):
 
     ### Load datasets (i.e., create tasks).
     dhandlers = tutils.load_datasets(config, shared, logger,
-                                     data_dir='../datasets')
+                                     data_dir=DATA_DIR_CIFAR)
 
     ### Create main network.
     # TODO Allow main net only training.
