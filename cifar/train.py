@@ -263,6 +263,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     ### Optimizer ###
     #################
     # Define the optimizers used to train main network and hypernet.
+    #TODO: check the definition of Hnet class and add conditional generalization
     if hnet is not None:
         theta_params = list(hnet.theta)
         if config.continue_emb_training:
