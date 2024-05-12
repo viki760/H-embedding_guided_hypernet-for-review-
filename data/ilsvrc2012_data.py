@@ -366,7 +366,7 @@ class ILSVRC2012Data(LargeImgDataset):
 
             num_classes = len(self._imid_to_wnid.keys())
             assert(num_classes == 1000)
-            val_counts = np.zeros(num_classes, dtype=np.int)
+            val_counts = np.zeros(num_classes, dtype=np.int64)
 
             ds_train.samples = []
             ds_train.imgs = ds_train.samples

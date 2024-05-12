@@ -246,7 +246,7 @@ class CUB2002011(LargeImgDataset):
 
         num_classes = len(lbl2lbl_name_tmp.keys())
         assert(num_classes == 200)
-        val_counts = np.zeros(num_classes, dtype=np.int)
+        val_counts = np.zeros(num_classes, dtype=np.int64)
 
         for img_path, img_lbl in orig_samples:
             iid = img2id[img_path]

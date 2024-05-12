@@ -209,7 +209,7 @@ class SplitCIFAR100Data(CIFAR100Data):
         labels = self._labels
         if self.is_one_hot:
             assert(outputs.shape[1] == self._data['num_classes'])
-            mask = np.zeros(self._data['num_classes'], dtype=np.bool)
+            mask = np.zeros(self._data['num_classes'], dtype=np.bool_)
             mask[labels] = True
 
             return outputs[:, mask]

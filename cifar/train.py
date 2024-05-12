@@ -137,10 +137,10 @@ def test(task_id, data, mnet, hnet, device, shared, config, writer, logger,
 
         # We store all predicted labels and tasks while going over individual
         # test batches.
-        correct_labels = np.empty(test_size, np.int)
-        pred_labels = np.empty(test_size, np.int)
-        correct_tasks = np.ones(test_size, np.int) * task_id
-        pred_tasks = np.empty(test_size, np.int)
+        correct_labels = np.empty(test_size, np.int64)
+        pred_labels = np.empty(test_size, np.int64)
+        correct_tasks = np.ones(test_size, np.int64) * task_id
+        pred_tasks = np.empty(test_size, np.int64)
 
         curr_bs = batch_size
         N_processed = 0
@@ -398,6 +398,9 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         iter_per_epoch = int(np.ceil(data.num_train_samples / \
                                      config.batch_size))
         training_iterations = config.epochs * iter_per_epoch
+
+    logger.info('Epochs per task: %d ...' % config.epochs)
+    logger.info('Iters per task: %d ...' % training_iterations)
 
     summed_iter_runtime = 0
 
