@@ -77,6 +77,7 @@ def parse_cmd_arguments(mode='resnet_cifar', default=False, argv=None):
             show_specnorm=False, show_dropout_rate=False, show_net_act=False)
         cli.hypernet_args(parser, dhyper_chunks=7000, dhnet_arch='',
                           dtemb_size=32, demb_size=32)
+        #! config here
         cli.data_args(parser, show_disable_data_augmentation=True)
         train_agroup = cli.train_args(parser, show_lr=True, dlr=0.001,
             show_epochs=True, depochs=200, dbatch_size=32,

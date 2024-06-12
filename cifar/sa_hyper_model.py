@@ -307,6 +307,8 @@ class SAHnetPart(nn.Module, CLHyperNetInterface):
 
                 sa_ind += 1
 
+        #* definition of hypernet frame
+
         if not no_theta:
             for i, dims in enumerate(theta_shapes_internal):
                 self._theta.append(nn.Parameter(torch.Tensor(*dims),
