@@ -1,2 +1,2 @@
-out_zenke
-out_resnet
+out_zenke/run_*
+out_resnet/run_*
