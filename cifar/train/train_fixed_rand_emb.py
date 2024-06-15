@@ -43,12 +43,199 @@ from utils import sim_utils as sutils
 import utils.optim_step as opstep
 import utils.hnet_regularizer as hreg
 from utils.torch_utils import get_optimizer
-from metrics.WTE import WTE
-from train import *
 
 DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
 
-def train_with_emb(task_id, data, mnet, hnet, device, config, shared, writer, logger, with_emb = True, task_embs=None):
+def test(task_id, data, mnet, hnet, device, shared, config, writer, logger,
+         train_iter=None, task_emb=None, cl_scenario=None, test_size=None):
+    """Evaluate the current performance using the test set.
+
+    Note:
+        The hypernetwork ``hnet`` may be ``None``, in which case it is assumed
+        that the main network ``mnet`` has internal weights.
+
+    Args:
+        (....): See docstring of function :func:`train`.
+        train_iter (int, optional): The current training iteration. If given, it
+            is used for tensorboard logging.
+        task_emb (torch.Tensor, optional): Task embedding. If given, no task ID
+            will be provided to the hypernetwork. This might be useful if the
+            performance of other than the trained task embeddings should be
+            tested.
+
+            .. note::
+                This option may only be used for ``cl_scenario=1``. It doesn't
+                make sense if the task ID has to be inferred.
+        cl_scenario (int, optional): In case the system should be tested on
+            another CL scenario than the one user-defined in ``config``.
+            
+            .. note::
+                It is up to the user to ensure that the CL scnearios are
+                compatible in this implementation.
+        test_size (int, optional): In case the testing shouldn't be performed
+            on the entire test set, this option can be used to specify the
+            number of test samples to be used.
+
+    Returns:
+        (tuple): Tuple containing:
+
+        - **test_acc**: Test accuracy on classification task.
+        - **task_acc**: Task prediction accuracy (always 100% for **CL1**).
+    """
+    if cl_scenario is None:
+        cl_scenario = config.cl_scenario
+    else:
+        assert cl_scenario in [1,2,3]
+
+    # `task_emb` ignored for other cl scenarios!
+    assert task_emb is None or cl_scenario == 1, \
+        '"task_emb" may only be specified for CL1, as we infer the ' + \
+        'embedding for other scenarios.'
+
+    mnet.eval()
+    if hnet is not None:
+        hnet.eval()
+
+    if train_iter is None:
+        logger.info('### Test run ...')
+    else:
+        logger.info('# Testing network before running training step %d ...' % \
+                    train_iter)
+
+    # We need to tell the main network, which batch statistics to use, in case
+    # batchnorm is used and we checkpoint the batchnorm stats.
+    mnet_kwargs = {}
+    if mnet.batchnorm_layers is not None:
+        if config.bn_distill_stats:
+            raise NotImplementedError()
+        elif not config.bn_no_running_stats and \
+                not config.bn_no_stats_checkpointing:
+            # Specify current task as condition to select correct
+            # running stats.
+            mnet_kwargs['condition'] = task_id
+
+            if task_emb is not None:
+                # NOTE `task_emb` might have nothing to do with `task_id`.
+                logger.warning('Using batch statistics accumulated for task ' +
+                               '%d for batchnorm, but testing is ' % task_id +
+                               'performed using a given task embedding.')
+
+    with torch.no_grad():
+        batch_size = config.val_batch_size
+        # FIXME Assuming all output heads have the same size.
+        n_head = data.num_classes
+
+        if test_size is None or test_size >= data.num_test_samples:
+            test_size = data.num_test_samples
+        else:
+            # Make sure that we always use the same test samples.
+            data.reset_batch_generator(train=False, test=True, val=False)
+            logger.info('Note, only part of test set is used for this test ' +
+                        'run!')
+
+        test_loss = 0.0
+
+        # We store all predicted labels and tasks while going over individual
+        # test batches.
+        correct_labels = np.empty(test_size, np.int64)
+        pred_labels = np.empty(test_size, np.int64)
+        correct_tasks = np.ones(test_size, np.int64) * task_id
+        pred_tasks = np.empty(test_size, np.int64)
+
+        curr_bs = batch_size
+        N_processed = 0
+
+        # Sweep through the test set.
+        while N_processed < test_size:
+            if N_processed + curr_bs > test_size:
+                curr_bs = test_size - N_processed
+            N_processed += curr_bs
+
+            batch = data.next_test_batch(curr_bs)
+            X = data.input_to_torch_tensor(batch[0], device)
+            T = data.output_to_torch_tensor(batch[1], device)
+
+            ############################
+            ### Get main net weights ###
+            ############################
+            if hnet is None:
+                weights = None
+            elif cl_scenario > 1:
+                raise NotImplementedError()
+            #* Task Embedding
+            elif task_emb is not None:
+                weights = hnet.forward(task_emb=task_emb)
+            else:
+                weights = hnet.forward(task_id=task_id)
+
+            #######################
+            ### Get predictions ###
+            #######################
+            Y_hat_logits = mnet.forward(X, weights=weights, **mnet_kwargs)
+
+            if config.cl_scenario == 1:
+                # Select current head.
+                task_out = [task_id*n_head, (task_id+1)*n_head]
+            elif config.cl_scenario == 2:
+                # Only 1 output head.
+                task_out = [0, n_head]
+            else:
+                raise NotImplementedError()
+                # TODO Choose the predicted output head per sample.
+                #task_out = [predicted_task_id[0]*n_head,
+                #            (predicted_task_id[0]+1)*n_head]
+
+            Y_hat_logits = Y_hat_logits[:, task_out[0]:task_out[1]]
+            # We take the softmax after the output neurons are chosen.
+            Y_hat = F.softmax(Y_hat_logits, dim=1).cpu().numpy()
+
+            correct_labels[N_processed-curr_bs:N_processed] = \
+                T.argmax(dim=1, keepdim=False).cpu().numpy()
+
+            pred_labels[N_processed-curr_bs:N_processed] = \
+                Y_hat.argmax(axis=1)
+
+            # Set task prediction to 100% if we do not infer it.
+            if cl_scenario > 1:
+                raise NotImplementedError()
+                #pred_tasks[N_processed-curr_bs:N_processed] = \
+                #    predicted_task_id.cpu().numpy()
+            else:
+                pred_tasks[N_processed-curr_bs:N_processed] = task_id
+
+            # Note, targets are 1-hot encoded.
+            test_loss += Classifier.logit_cross_entropy_loss(Y_hat_logits, T,
+                                                             reduction='sum')
+
+        class_n_correct = (correct_labels == pred_labels).sum()
+        test_acc = 100.0 * class_n_correct / test_size
+
+        task_n_correct = (correct_tasks == pred_tasks).sum()
+        task_acc = 100.0 * task_n_correct / test_size
+
+        test_loss /= test_size
+
+        msg = '### Test accuracy of task %d' % (task_id+1) \
+            + (' (before training iteration %d)' % train_iter if \
+               train_iter is not None else '') \
+            + ': %.3f' % (test_acc) \
+            + (' (using a given task embedding)' if task_emb is not None \
+               else '') \
+            + (' - task prediction accuracy: %.3f' % task_acc if \
+               cl_scenario > 1 else '')
+        logger.info(msg)
+
+        if train_iter is not None:
+            writer.add_scalar('test/task_%d/class_accuracy' % task_id,
+                              test_acc, train_iter)
+
+            if config.cl_scenario > 1:
+                writer.add_scalar('test/task_%d/task_pred_accuracy' % \
+                                  task_id, task_acc, train_iter)
+
+        return test_acc, task_acc
+
+def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     """Train the hyper network using the task-specific loss plus a regularizer
     that should overcome catastrophic forgetting.
 
@@ -78,23 +265,22 @@ def train_with_emb(task_id, data, mnet, hnet, device, config, shared, writer, lo
     #################
     # Define the optimizers used to train main network and hypernet.
     #TODO: check the definition of Hnet class and add conditional generalization
+    #* add all previous task embedding to parameters but only get emb optimizer for current embedding
     if hnet is not None:
         theta_params = list(hnet.theta)
-        if with_emb:
-            print("Training with given task embedding (fixed)")
-        # else:
-        #     if config.continue_emb_training:
-        #         for i in range(task_id): # for all previous task embeddings
-        #             theta_params.append(hnet.get_task_emb(i))
+        if config.continue_emb_training:
+            for i in range(task_id): # for all previous task embeddings
+                theta_params.append(hnet.get_task_emb(i))
 
-        #     # Only for the current task embedding.
-        #     # Important that this embedding is in a different optimizer in case
-        #     # we use the lookahead.
-        #     emb_optimizer = get_optimizer([hnet.get_task_emb(task_id)],
-        #         config.lr, momentum=config.momentum,
-        #         weight_decay=config.weight_decay, use_adam=config.use_adam,
-        #         adam_beta1=config.adam_beta1, use_rmsprop=config.use_rmsprop)
-
+        # Only for the current task embedding.
+        # Important that this embedding is in a different optimizer in case
+        # we use the lookahead.
+        #* no emb optimizer
+        emb_optimizer = None
+        # emb_optimizer = get_optimizer([hnet.get_task_emb(task_id)],
+        #     config.lr, momentum=config.momentum,
+        #     weight_decay=config.weight_decay, use_adam=config.use_adam,
+        #     adam_beta1=config.adam_beta1, use_rmsprop=config.use_rmsprop)
     else:
         theta_params = mnet.weights
         emb_optimizer = None
@@ -228,7 +414,7 @@ def train_with_emb(task_id, data, mnet, hnet, device, config, shared, writer, lo
         # That way, we can see the initial performance of the untrained network.
         if i % config.val_iter == 0:
             test(task_id, data, mnet, hnet, device, shared, config, writer,
-                 logger, train_iter=i, task_emb=task_embs[task_id])
+                 logger, train_iter=i)
             mnet.train()
             if hnet is not None:
                 hnet.train()
@@ -267,7 +453,7 @@ def train_with_emb(task_id, data, mnet, hnet, device, config, shared, writer, lo
         if config.mnet_only:
             weights = None
         else:
-            weights = hnet.forward(task_emb=task_embs[task_id])
+            weights = hnet.forward(task_id=task_id)
         Y_hat_logits = mnet.forward(X, weights, **mnet_kwargs)
 
         # Restrict output neurons
@@ -412,9 +598,87 @@ def train_with_emb(task_id, data, mnet, hnet, device, config, shared, writer, lo
     logger.info('Elapsed time for training task %d: %f sec.' % \
                 (task_id+1, time()-start_time))
 
+def test_multiple(dhandlers, mnet, hnet, device, config, shared, writer,
+                  logger):
+    """Method to test continual learning experiment accuracy
 
-def analysis_with_emb(dhandlers, mnet, hnet, device, config, shared, writer, logger,
-             during_weights, task_embs):
+    Args:
+        (....): See docstring of function :func:`train`.
+        dhandlers (list): List of data handlers. The accuracy of each task in
+            this list will be computed using function :func:`test`. The index
+            within the list will be considered as task ID.
+    """
+    class_accs = []
+    task_accs = []
+
+    num_tasks = len(dhandlers)
+
+    ### Task-incremental learning
+    if config.cl_scenario == 1:
+        logger.info('### Testing task-incremental learning scenario')
+        # Iterate through learned embeddings and tasks and compute test acc.
+        for j in range(num_tasks):
+            data = dhandlers[j]
+
+            test_acc, _ = test(j, data, mnet, hnet, device, shared,
+                               config, writer, logger)
+
+            class_accs.append(test_acc)
+            shared.summary['acc_final'][j] = test_acc
+
+        shared.summary['acc_avg_final'] = np.mean(class_accs)
+        logger.info('### Task-incremental learning scenario accuracies: %s ' \
+                    % (str(class_accs)) + '(avg: %.3f)'
+                    % (shared.summary['acc_avg_final']))
+
+        writer.add_scalar('final/task_incremental',
+                          shared.summary['acc_avg_final'])
+
+    ### Domain-incremental learning & class-incremental learning
+    if config.cl_scenario == 2 or config.cl_scenario == 3:
+        raise NotImplementedError()
+
+        if config.cl_scenario == 2:
+            logger.info('### Testing domain-incremental learning scenario')
+        else:
+            logger.info('### Testing class-incrementa learning scenario')
+
+
+        for j in range(num_tasks):
+            data = dhandlers[j]
+
+            test_acc, task_acc = test(j, data, mnet, hnet, device, shared,
+                                      config, writer, logger)
+
+            class_accs.append(test_acc)
+            task_accs.append(task_acc)
+
+            shared.summary['acc_final'][j] = test_acc
+
+        shared.summary['acc_avg_final'] = np.mean(class_accs)
+
+        if config.cl_scenario == 2:
+            logger.info('### Domain-incremental learning scenario ' +
+                        'accuracies: %s ' % (str(class_accs)) + '(avg: %.3f)'
+                        % (shared.summary['acc_avg_final']))
+            writer.add_scalar('final/domain_incremental',
+                              shared.summary['acc_avg_final'])
+        else:
+            logger.info('### Class-incremental learning scenario ' +
+                        'accuracies: %s ' % (str(class_accs)) + '(avg: %.3f)'
+                        % (shared.summary['acc_avg_final']))
+            writer.add_scalar('final/class_incremental',
+                              shared.summary['acc_avg_final'])
+
+        logger.info('### Task-inference accuracies: %s ' \
+                    % (str(task_accs)) + '(avg: %.3f)'
+                    % (np.mean(task_accs)))
+        writer.add_scalar('final/task_inference_acc', np.mean(task_accs))
+
+    return task_accs, class_accs
+
+def analysis(dhandlers, mnet, hnet, device, config, shared, writer, logger,
+             during_weights):
     """A function to do some post-hoc analysis on the hypernetwork.
 
     Specifically, this function does the following:
@@ -436,8 +700,8 @@ def analysis_with_emb(dhandlers, mnet, hnet, device, config, shared, writer, log
 
     # Test how much the weights of each task have changed during training the
     # remaining tasks.
-    for j in range(len(task_embs)):
-        cur_weights = hnet.forward(task_emb=task_embs[j])
+    for j in range(num_tasks):
+        cur_weights = hnet.forward(j)
         cur_weights = torch.cat([a.detach().clone().cpu().flatten()
                                                         for a in cur_weights])
         aft_weights = torch.cat([a.flatten() for a in during_weights[j]])
@@ -447,12 +711,12 @@ def analysis_with_emb(dhandlers, mnet, hnet, device, config, shared, writer, log
                     (j, torch.sqrt(torch.sum((aft_weights - cur_weights)**2))))
 
     # FIXME Inefficient, we already computed all hnet outputs above.
-    for j in range(len(task_embs)):
-        for i in range(len(task_embs)):
+    for j in range(num_tasks):
+        for i in range(num_tasks):
             if i <= j:
                 continue
-            weights_1 = hnet.forward(task_emb=task_embs[j])
-            weights_2 = hnet.forward(task_emb=task_embs[i])
+            weights_1 = hnet.forward(j)
+            weights_2 = hnet.forward(i)
             weights_1 = torch.cat([a.detach().clone().flatten() \
                                    for a in weights_1])
             weights_2 = torch.cat([a.detach().clone().flatten() \
@@ -549,12 +813,10 @@ def run(config, experiment='resnet'):
                 logger.info('From scratch training: Creating new hypernetwork.')
                 hnet = tutils.get_hnet_model(config, mnet, logger, device)
 
-        WTE_task_embs = WTE(data)
-
         ################################
         ### Train and test on task j ###
         ################################
-        train_with_emb(j, data, mnet, hnet, device, config, shared, writer, logger,task_embs=WTE_task_embs)
+        train(j, data, mnet, hnet, device, config, shared, writer, logger)
 
         ### Final test run.
         if hnet is not None:
