@@ -413,7 +413,7 @@ def train_with_emb(task_id, data, mnet, hnet, device, config, shared, writer, lo
                 (task_id+1, time()-start_time))
 
 
-def analysis_with_emb(dhandlers, mnet, hnet, device, config, shared, writer, logger,
+def analysis(dhandlers, mnet, hnet, device, config, shared, writer, logger,
              during_weights, task_embs):
     """A function to do some post-hoc analysis on the hypernetwork.
 
@@ -596,7 +596,7 @@ def run(config, experiment='resnet'):
     ### Run some analysis ###
     #########################
     if not config.mnet_only:
-        analysis_with_emb(dhandlers, mnet, hnet, device, config, shared, writer, logger,
+        analysis(dhandlers, mnet, hnet, device, config, shared, writer, logger,
                  weights_after_training)
 
     ### Write final summary.

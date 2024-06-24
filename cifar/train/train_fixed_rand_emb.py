@@ -753,7 +753,7 @@ def run(config, experiment='resnet'):
     ### Load datasets (i.e., create tasks).
     dhandlers = tutils.load_datasets(config, shared, logger,
                                      data_dir=DATA_DIR_CIFAR)
-
+    # TODO Use this to get embedding
     ### Create main network.
     # TODO Allow main net only training.
     mnet = tutils.get_main_model(config, shared, logger, device,

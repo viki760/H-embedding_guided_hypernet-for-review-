@@ -136,7 +136,7 @@ class label_mds:
         return mds, data_label_pairs  # , reference
 
 
-def WTE(datasets, label_dim, device, class_num=None, ref=None, maxsamples=None):
+def get_WTE(datasets, label_dim, device, class_num=None, ref=None, maxsamples=None):
     print('Embedding labels...')
     emb = label_mds(emb_dim=label_dim, class_num=class_num,
                     device=device, maxsamples=maxsamples)

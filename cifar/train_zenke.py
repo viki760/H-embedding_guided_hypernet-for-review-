@@ -34,11 +34,11 @@ See :ref:`cifar-readme-zenke-reference-label` for usage instructions.
 import __init__ # pylint: disable=unused-import
 
 from cifar import train_args
-from cifar import train
+from hypercl.cifar.train import train_vanilla
 
 if __name__ == '__main__':
     config = train_args.parse_cmd_arguments(mode='zenke_cifar')
 
-    train.run(config, experiment='zenke')
+    train_vanilla.run(config, experiment='zenke')
 
 

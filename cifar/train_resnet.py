@@ -34,11 +34,11 @@ See :ref:`cifar-readme-resnet-reference-label` for usage instructions.
 import __init__ # pylint: disable=unused-import
 
 from cifar import train_args
-from cifar.train import train_fixed_rand_emb
+from cifar.train import train_fixed_rand_emb as train_func
 
 if __name__ == '__main__':
     config = train_args.parse_cmd_arguments(mode='resnet_cifar')
 
-    train_fixed_rand_emb.run(config, experiment='resnet')
+    train_func.run(config, experiment='resnet')
 
 
