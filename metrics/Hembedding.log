@@ -1,0 +1,194 @@
+Created output folder ./out_resnet/run_2024-07-19_22-34-40.
+07/19/2024 10:34:40 PM - INFO - Using cuda: True
+07/19/2024 10:34:40 PM - INFO - Data augmentation will be used.
+07/19/2024 10:34:40 PM - INFO - Loading CIFAR datasets ...
+Creating data handlers for SplitCIFAR tasks ...
+Reading CIFAR-10 dataset ...
+Elapsed time to read dataset: 1.665732 sec
+Reading CIFAR-100 dataset ...
+Elapsed time to read dataset: 0.827437 sec
+Created SplitCIFAR task with labels range(0, 10) and 5000 train, 1000 test and 0 val samples.
+Reading CIFAR-100 dataset ...
+Elapsed time to read dataset: 0.841994 sec
+Created SplitCIFAR task with labels range(10, 20) and 5000 train, 1000 test and 0 val samples.
+Reading CIFAR-100 dataset ...
+Elapsed time to read dataset: 0.904527 sec
+Created SplitCIFAR task with labels range(20, 30) and 5000 train, 1000 test and 0 val samples.
+Reading CIFAR-100 dataset ...
+Elapsed time to read dataset: 1.070823 sec
+Created SplitCIFAR task with labels range(30, 40) and 5000 train, 1000 test and 0 val samples.
+Reading CIFAR-100 dataset ...
+Elapsed time to read dataset: 0.818598 sec
+Created SplitCIFAR task with labels range(40, 50) and 5000 train, 1000 test and 0 val samples.
+Creating data handlers for SplitCIFAR tasks ... Done
+07/19/2024 10:34:50 PM - INFO - Loaded 6 CIFAR task(s) into memory.
+07/19/2024 10:34:50 PM - INFO - Building a ResNet ...
+07/19/2024 10:34:50 PM - INFO - The network will have 60 output neurons.
+A ResNet with 32 layers and 468540 weights is created.
+07/19/2024 10:34:50 PM - INFO - Creating hypernetwork ...
+Constructed hypernetwork with 457336 parameters (457144 network weights + 192 task embedding weights).
+The hypernetwork has a total of 468540 outputs.
+Epoch 0, Loss: 1.0397894382476807, Dist_scaling: 1.0
+Epoch 50, Loss: 0.826697826385498, Dist_scaling: 1.0
+Epoch 100, Loss: 0.6266536712646484, Dist_scaling: 1.0
+Epoch 150, Loss: 0.4363231658935547, Dist_scaling: 1.0
+Epoch 200, Loss: 0.2533748149871826, Dist_scaling: 1.0
+Epoch 250, Loss: 0.07666456699371338, Dist_scaling: 1.0
+Epoch 300, Loss: 0.001438736915588379, Dist_scaling: 1.0
+Epoch 350, Loss: 0.00012481212615966797, Dist_scaling: 1.0
+Epoch 400, Loss: 0.00048220157623291016, Dist_scaling: 1.0
+Epoch 450, Loss: 0.00023508071899414062, Dist_scaling: 1.0
+Epoch 500, Loss: 2.384185791015625e-07, Dist_scaling: 1.0
+Epoch 550, Loss: 0.0004582405090332031, Dist_scaling: 1.0
+Epoch 600, Loss: 0.0004894733428955078, Dist_scaling: 1.0
+Epoch 650, Loss: 4.9591064453125e-05, Dist_scaling: 1.0
+Epoch 700, Loss: 0.0008895397186279297, Dist_scaling: 1.0
+Epoch 750, Loss: 6.639957427978516e-05, Dist_scaling: 1.0
+Epoch 800, Loss: 0.0002129077911376953, Dist_scaling: 1.0
+Epoch 850, Loss: 0.0002511739730834961, Dist_scaling: 1.0
+Epoch 900, Loss: 0.00024449825286865234, Dist_scaling: 1.0
+Epoch 950, Loss: 4.9233436584472656e-05, Dist_scaling: 1.0
+Finished optimization for task 1
+Final Loss: 2.2649765014648438e-05, Dist_scaling: 1.0
+Cur_emb: Parameter containing:
+tensor([0.2108, 0.3268, 0.7258, 0.1569, 0.3652, 0.7707, 0.5568, 0.3650, 0.7805,
+        0.5690, 0.5381, 0.8179, 0.3878, 0.3143, 0.9559, 0.5853, 0.2714, 0.6405,
+        0.4279, 0.2076, 0.4913, 0.7512, 0.5620, 0.6425, 0.5645, 0.4103, 0.5238,
+        0.4914, 0.5949, 0.6201, 0.6705, 0.4720], device='cuda:0',
+       requires_grad=True)
+Epoch 0, Loss: 1.1432570219039917, Dist_scaling: 1.0010000467300415
+Epoch 50, Loss: 0.6182020902633667, Dist_scaling: 1.0510023832321167
+Epoch 100, Loss: 0.2893482446670532, Dist_scaling: 1.084180235862732
+Epoch 150, Loss: 0.16339826583862305, Dist_scaling: 1.0999034643173218
+Epoch 200, Loss: 0.04469180107116699, Dist_scaling: 1.1153966188430786
+Epoch 250, Loss: 0.0005643367767333984, Dist_scaling: 1.120833158493042
+Epoch 300, Loss: 0.0016248226165771484, Dist_scaling: 1.1209003925323486
+Epoch 350, Loss: 0.0007748603820800781, Dist_scaling: 1.1208661794662476
+Epoch 400, Loss: 0.001015305519104004, Dist_scaling: 1.1209126710891724
+Epoch 450, Loss: 0.0019555091857910156, Dist_scaling: 1.1208953857421875
+Epoch 500, Loss: 0.0013450384140014648, Dist_scaling: 1.1209288835525513
+Epoch 550, Loss: 0.0011659860610961914, Dist_scaling: 1.1210520267486572
+Epoch 600, Loss: 0.001322031021118164, Dist_scaling: 1.1211886405944824
+Epoch 650, Loss: 0.0012216567993164062, Dist_scaling: 1.1210534572601318
+Epoch 700, Loss: 0.0008537769317626953, Dist_scaling: 1.1208789348602295
+Epoch 750, Loss: 0.0010704994201660156, Dist_scaling: 1.1209193468093872
+Epoch 800, Loss: 0.0018578767776489258, Dist_scaling: 1.1209017038345337
+Epoch 850, Loss: 0.0012946128845214844, Dist_scaling: 1.120934247970581
+Epoch 900, Loss: 0.0011159181594848633, Dist_scaling: 1.1210544109344482
+Epoch 950, Loss: 0.0013443231582641602, Dist_scaling: 1.121188998222351
+Finished optimization for task 2
+Final Loss: 0.000582575798034668, Dist_scaling: 1.1211262941360474
+Cur_emb: Parameter containing:
+tensor([0.6241, 0.2363, 0.7211, 0.1354, 0.1908, 0.6278, 0.2137, 0.4506, 0.2619,
+        0.2118, 0.7566, 0.3553, 0.3164, 0.3735, 0.7123, 0.9325, 0.1234, 0.6990,
+        0.2185, 0.2075, 0.7398, 0.4407, 0.4728, 0.3858, 0.4323, 0.9346, 0.3577,
+        0.8122, 0.6005, 0.4218, 0.5558, 0.8720], device='cuda:0',
+       requires_grad=True)
+Epoch 0, Loss: 2.3217034339904785, Dist_scaling: 1.0010000467300415
+Epoch 50, Loss: 1.4695301055908203, Dist_scaling: 1.0510023832321167
+Epoch 100, Loss: 0.6622979640960693, Dist_scaling: 1.101004719734192
+Epoch 150, Loss: 0.2504018545150757, Dist_scaling: 1.1313724517822266
+Epoch 200, Loss: 0.134521484375, Dist_scaling: 1.1392159461975098
+Epoch 250, Loss: 0.0645972490310669, Dist_scaling: 1.145219087600708
+Epoch 300, Loss: 0.0043413639068603516, Dist_scaling: 1.1509068012237549
+Epoch 350, Loss: 0.0014827251434326172, Dist_scaling: 1.150880217552185
+Epoch 400, Loss: 0.001012563705444336, Dist_scaling: 1.1507233381271362
+Epoch 450, Loss: 0.001179814338684082, Dist_scaling: 1.1505744457244873
+Epoch 500, Loss: 0.0009955167770385742, Dist_scaling: 1.1507223844528198
+Epoch 550, Loss: 0.0006456375122070312, Dist_scaling: 1.150813341140747
+Epoch 600, Loss: 0.0034142732620239258, Dist_scaling: 1.1505743265151978
+Epoch 650, Loss: 0.0011394023895263672, Dist_scaling: 1.1508008241653442
+Epoch 700, Loss: 0.0013068914413452148, Dist_scaling: 1.1505807638168335
+Epoch 750, Loss: 0.00039887428283691406, Dist_scaling: 1.1506603956222534
+Epoch 800, Loss: 0.0005379915237426758, Dist_scaling: 1.1506311893463135
+Epoch 850, Loss: 0.0014429092407226562, Dist_scaling: 1.1505063772201538
+Epoch 900, Loss: 0.0010498762130737305, Dist_scaling: 1.1507381200790405
+Epoch 950, Loss: 0.0009135007858276367, Dist_scaling: 1.1508402824401855
+Finished optimization for task 3
+Final Loss: 0.0004329681396484375, Dist_scaling: 1.1507103443145752
+Cur_emb: Parameter containing:
+tensor([0.7467, 0.6524, 0.1946, 0.1495, 0.7645, 0.5701, 0.1351, 0.1415, 0.5913,
+        0.1234, 0.2080, 0.6615, 0.5352, 0.7916, 0.8161, 0.4694, 0.2289, 0.1864,
+        0.4840, 0.4204, 0.5100, 0.8711, 0.3988, 0.6610, 0.1690, 0.8259, 0.4317,
+        0.8266, 0.7333, 0.6156, 0.4071, 0.6550], device='cuda:0',
+       requires_grad=True)
+Epoch 0, Loss: 2.170856475830078, Dist_scaling: 1.0010000467300415
+Epoch 50, Loss: 1.1261285543441772, Dist_scaling: 1.0510023832321167
+Epoch 100, Loss: 0.6102918386459351, Dist_scaling: 1.0861413478851318
+Epoch 150, Loss: 0.2473452091217041, Dist_scaling: 1.1115779876708984
+Epoch 200, Loss: 0.04839730262756348, Dist_scaling: 1.1256260871887207
+Epoch 250, Loss: 0.0032275915145874023, Dist_scaling: 1.1265286207199097
+Epoch 300, Loss: 0.005434155464172363, Dist_scaling: 1.126752257347107
+Epoch 350, Loss: 0.00285494327545166, Dist_scaling: 1.126301884651184
+Epoch 400, Loss: 0.0010238885879516602, Dist_scaling: 1.126536250114441
+Epoch 450, Loss: 0.0019136667251586914, Dist_scaling: 1.1266505718231201
+Epoch 500, Loss: 0.0014560222625732422, Dist_scaling: 1.1265279054641724
+Epoch 550, Loss: 0.0018569231033325195, Dist_scaling: 1.1264615058898926
+Epoch 600, Loss: 0.001084446907043457, Dist_scaling: 1.1264936923980713
+Epoch 650, Loss: 0.0007948875427246094, Dist_scaling: 1.1265517473220825
+Epoch 700, Loss: 0.0019855499267578125, Dist_scaling: 1.126299262046814
+Epoch 750, Loss: 0.001981496810913086, Dist_scaling: 1.12653648853302
+Epoch 800, Loss: 0.002555370330810547, Dist_scaling: 1.1265431642532349
+Epoch 850, Loss: 0.0009938478469848633, Dist_scaling: 1.1265218257904053
+Epoch 900, Loss: 0.0013980865478515625, Dist_scaling: 1.1264913082122803
+Epoch 950, Loss: 0.0006308555603027344, Dist_scaling: 1.1265798807144165
+Finished optimization for task 4
+Final Loss: 0.0006781816482543945, Dist_scaling: 1.126455307006836
+Cur_emb: Parameter containing:
+tensor([0.3108, 0.5504, 0.5644, 0.1113, 0.5058, 0.5658, 0.3287, 0.0948, 0.1928,
+        0.2791, 0.5061, 0.7444, 0.7305, 0.6335, 0.4898, 0.6839, 0.1128, 0.7633,
+        0.5336, 0.4354, 0.7282, 0.7482, 0.3285, 0.7301, 0.2137, 0.3941, 0.3723,
+        0.4393, 0.1581, 0.5830, 0.4524, 0.9280], device='cuda:0',
+       requires_grad=True)
+Epoch 0, Loss: 3.358720541000366, Dist_scaling: 1.0010000467300415
+Epoch 50, Loss: 2.018657684326172, Dist_scaling: 1.0510023832321167
+Epoch 100, Loss: 0.8596364259719849, Dist_scaling: 1.0999006032943726
+Epoch 150, Loss: 0.5298912525177002, Dist_scaling: 1.117124080657959
+Epoch 200, Loss: 0.27526402473449707, Dist_scaling: 1.130669355392456
+Epoch 250, Loss: 0.13950848579406738, Dist_scaling: 1.1372488737106323
+Epoch 300, Loss: 0.03496396541595459, Dist_scaling: 1.1440014839172363
+Epoch 350, Loss: 0.0017584562301635742, Dist_scaling: 1.146040678024292
+Epoch 400, Loss: 0.0028090476989746094, Dist_scaling: 1.1461851596832275
+Epoch 450, Loss: 0.0019606351852416992, Dist_scaling: 1.1461155414581299
+Epoch 500, Loss: 0.003314971923828125, Dist_scaling: 1.1460177898406982
+Epoch 550, Loss: 0.0012433528900146484, Dist_scaling: 1.1460601091384888
+Epoch 600, Loss: 0.0016775131225585938, Dist_scaling: 1.1460987329483032
+Epoch 650, Loss: 0.0030390024185180664, Dist_scaling: 1.1460793018341064
+Epoch 700, Loss: 0.0018286705017089844, Dist_scaling: 1.1462230682373047
+Epoch 750, Loss: 0.0024911165237426758, Dist_scaling: 1.1461561918258667
+Epoch 800, Loss: 0.0007060766220092773, Dist_scaling: 1.1461035013198853
+Epoch 850, Loss: 0.001643061637878418, Dist_scaling: 1.146040678024292
+Epoch 900, Loss: 0.0031021833419799805, Dist_scaling: 1.146036982536316
+Epoch 950, Loss: 0.002940535545349121, Dist_scaling: 1.1460753679275513
+Finished optimization for task 5
+Final Loss: 0.005027413368225098, Dist_scaling: 1.1462581157684326
+Cur_emb: Parameter containing:
+tensor([0.5667, 0.3230, 0.7461, 0.8240, 0.8235, 0.3112, 0.1302, 0.5030, 0.7714,
+        0.2817, 0.3708, 0.4458, 0.2715, 0.6612, 0.6911, 0.7425, 0.6297, 0.5184,
+        0.5294, 0.7144, 0.5021, 0.9625, 0.4436, 0.4028, 0.2051, 0.5383, 0.4710,
+        0.8032, 0.1923, 0.2537, 0.4698, 0.6187], device='cuda:0',
+       requires_grad=True)
+Embedding: tensor([[0.2108, 0.3254, 0.7258, 0.0661, 0.9118, 0.7707, 0.1576, 0.1171, 0.7602,
+         0.1339, 0.7270, 0.8179, 0.3917, 0.3462, 0.9559, 0.9955, 0.2712, 0.6723,
+         0.2905, 0.2076, 0.4913, 0.7512, 0.5620, 0.1041, 0.4807, 0.7502, 0.3952,
+         0.7436, 0.2682, 0.6201, 0.6705, 0.9837],
+        [0.2108, 0.3268, 0.7258, 0.1569, 0.3652, 0.7707, 0.5568, 0.3650, 0.7805,
+         0.5690, 0.5381, 0.8179, 0.3878, 0.3143, 0.9559, 0.5853, 0.2714, 0.6405,
+         0.4279, 0.2076, 0.4913, 0.7512, 0.5620, 0.6425, 0.5645, 0.4103, 0.5238,
+         0.4914, 0.5949, 0.6201, 0.6705, 0.4720],
+        [0.6241, 0.2363, 0.7211, 0.1354, 0.1908, 0.6278, 0.2137, 0.4506, 0.2619,
+         0.2118, 0.7566, 0.3553, 0.3164, 0.3735, 0.7123, 0.9325, 0.1234, 0.6990,
+         0.2185, 0.2075, 0.7398, 0.4407, 0.4728, 0.3858, 0.4323, 0.9346, 0.3577,
+         0.8122, 0.6005, 0.4218, 0.5558, 0.8720],
+        [0.7467, 0.6524, 0.1946, 0.1495, 0.7645, 0.5701, 0.1351, 0.1415, 0.5913,
+         0.1234, 0.2080, 0.6615, 0.5352, 0.7916, 0.8161, 0.4694, 0.2289, 0.1864,
+         0.4840, 0.4204, 0.5100, 0.8711, 0.3988, 0.6610, 0.1690, 0.8259, 0.4317,
+         0.8266, 0.7333, 0.6156, 0.4071, 0.6550],
+        [0.3108, 0.5504, 0.5644, 0.1113, 0.5058, 0.5658, 0.3287, 0.0948, 0.1928,
+         0.2791, 0.5061, 0.7444, 0.7305, 0.6335, 0.4898, 0.6839, 0.1128, 0.7633,
+         0.5336, 0.4354, 0.7282, 0.7482, 0.3285, 0.7301, 0.2137, 0.3941, 0.3723,
+         0.4393, 0.1581, 0.5830, 0.4524, 0.9280],
+        [0.5667, 0.3230, 0.7461, 0.8240, 0.8235, 0.3112, 0.1302, 0.5030, 0.7714,
+         0.2817, 0.3708, 0.4458, 0.2715, 0.6612, 0.6911, 0.7425, 0.6297, 0.5184,
+         0.5294, 0.7144, 0.5021, 0.9625, 0.4436, 0.4028, 0.2051, 0.5383, 0.4710,
+         0.8032, 0.1923, 0.2537, 0.4698, 0.6187]], device='cuda:0')
