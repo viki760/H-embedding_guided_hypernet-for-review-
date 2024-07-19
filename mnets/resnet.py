@@ -710,13 +710,13 @@ hyper_shapes_distilled` and the current statistics will be returned by the
                 stride = 1
 
                 h = conv_layer(h, stride, shortcut=shortcut_h)
-
-        if return_features:
-            return h
         
         ### Average pool all activities within a feature map.
         h = F.avg_pool2d(h, [h.size()[2], h.size()[3]])
         h = h.view(h.size(0), -1)
+
+        if return_features:
+            return h
 
         ### Apply final fully-connected layer and compute outputs.
         h = F.linear(h, w_weights[layer_ind], bias=b_weights[layer_ind])

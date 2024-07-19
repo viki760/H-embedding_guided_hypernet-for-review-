@@ -1,16 +1,25 @@
 import torch
 import torch.optim as optim
-from cifar import train_utils as tutils
 from torch.utils.tensorboard import SummaryWriter
 
 def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=1000, tensorboard = False):
     if tensorboard:
         writer = SummaryWriter("runs/Hembedding")
-    cur_dist = [get_Hscore(hnet(emb), mnet, cur_data) for emb in pre_embs]
-    cur_emb = torch.rand(dim_emb, requires_grad=True).to(device)
-    dist_scaling = torch.tensor(1,requires_grad=True).to(device)
+    cur_dist = [get_Hscore(hnet.forward(task_emb=emb), mnet, cur_data) for emb in pre_embs]
 
-    optimizer = optim.Adam([cur_emb,dist_scaling], lr=0.001)
+    cur_emb = torch.nn.Parameter(torch.rand(dim_emb, requires_grad=True, device=device))
+    dist_scaling = torch.tensor(1.0, requires_grad=True, device=device)
+
+    if len(pre_embs) == 0:
+        return cur_emb.detach()
+    elif len(pre_embs) == 1:
+        optimizer = optim.Adam([cur_emb], lr=0.001)
+    else:
+        dist_scaling = torch.nn.Parameter(dist_scaling)
+        optimizer = optim.Adam([cur_emb,dist_scaling], lr=0.001)
+
+    cur_dist = torch.tensor(cur_dist).to(device)
+    pre_embs = torch.tensor(torch.stack(pre_embs, dim=0)).to(device)
 
     for i in range(num_iter):
         optimizer.zero_grad()
@@ -20,7 +29,7 @@ def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=100
         loss.backward()
         optimizer.step()
 
-        if i%20 == 0:
+        if i%50 == 0:
             print(f"Epoch {i}, Loss: {loss.item()}, Dist_scaling: {dist_scaling.item()}")
             if tensorboard:
                 writer.add_scalar("Loss",loss.item(),i)
@@ -28,7 +37,10 @@ def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=100
                 writer.add_histogram("Cur_emb",cur_emb,i)
         
     writer.close() if tensorboard else None
-    return cur_emb    
+    print('Finished optimization for task',len(pre_embs))
+    print(f"Final Loss: {loss.item()}, Dist_scaling: {dist_scaling.item()}")
+    print("Cur_emb:",cur_emb)
+    return cur_emb.detach()    
 
 
 def get_Hscore(mnet_weights, mnet, cur_data):

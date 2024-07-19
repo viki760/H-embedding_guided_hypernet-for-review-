@@ -7,7 +7,7 @@ def getCov(X):
 
 def getDiffNN(f, Z):
     # Convert Z to tensor if it's not already one, assuming Z is a numpy array or a list
-    Z = torch.tensor(Z, dtype=torch.long)
+    Z = torch.argmax(torch.tensor(Z, dtype=torch.long), dim=1) # one-hot to normal label
     f = torch.tensor(f, dtype=torch.float32)
     
     Covf = getCov(f)
