@@ -413,7 +413,7 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
         self._is_properly_setup()
 
-    def forward(self, x, weights=None, distilled_params=None, condition=None):
+    def forward(self, x, weights=None, distilled_params=None, condition=None, return_features=False):
         """Compute the output :math:`y` of this network given the input
         :math:`x`.
 
@@ -711,6 +711,9 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
                 h = conv_layer(h, stride, shortcut=shortcut_h)
 
+        if return_features:
+            return h
+        
         ### Average pool all activities within a feature map.
         h = F.avg_pool2d(h, [h.size()[2], h.size()[3]])
         h = h.view(h.size(0), -1)

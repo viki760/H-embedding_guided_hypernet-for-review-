@@ -1,53 +1,35 @@
 import importlib
+from matplotlib import pyplot as plt
+class embedding:
+    def __init__(self, metric, mode="offline"):
 
-def sample_data(n_i,dhandlers,n_sample,device):
-    '''
-    sample `n_sample` data for each of the first `n_i` tasks from the `dhandlers` 
-    '''
-    sampled_data = []
-    for i in range(n_i):
-        data = dhandlers[i].next_train_batch(n_sample)
-        X = dhandlers[i].input_to_torch_tensor(data[0], device, mode='train')
-        T = dhandlers[i].output_to_torch_tensor(data[1], device, mode='train')
-        sampled_data.append({'X':X,'T':T})
-    return sampled_data
+        self.get_metric = getattr(importlib.import_module(f"metrics.{metric}"), f"get_{metric}")
 
-
-
-def get_embedding(metric, dhandlers, n_sample, device):
-
-    module = importlib.import_module(f"metrics.{metric}")
-
-    get_metric = getattr(module, f"get_{metric}")
-
-    sampled_data = sample_data(n_i = len(dhandlers), dhandlers=dhandlers, n_sample=n_sample, device=device)
-    dim_label = sampled_data[0]['T'].shape[-1]
-    embeddings = get_metric(sampled_data, label_dim = dim_label, device=device)
-    return embeddings
-
-
-
-def get_distance(metric, dhandlers, n_sample, device):
-    pass
-
-if __name__ == "__main__":
-    import sys
-    sys.path.append("/mnt/d/task/research/codes/HyperNet/hypercl/")
-
-    from cifar import train_utils as tutils
-    from cifar import train_args
-    from utils import sim_utils as sutils
-    from argparse import Namespace
+        if mode == "offline":
+            self.get_emb_fun = getattr(importlib.import_module(f"metrics.offline_embedding.get_embedding_offline"), "get_embedding")
+        elif mode == "online":
+            self.get_emb_fun = getattr(importlib.import_module(f"metrics.online_embedding.get_embedding_online"), "get_embedding")
+        else:
+            raise ValueError("mode must be either 'offline' or 'online'")        
     
-    DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
+    def get_embedding(self, *args, **kwargs):
+        self.embedding = self.get_emb_fun(self.get_metric, *args, **kwargs)
+        return self.embedding
+    
+    def display(self, compress_mode = None):
+        print(self.embedding)
+        if compress_mode == "PCA":
+            pass
+        elif compress_mode == "TSNE":
+            pass
+        else:
+            plt.imshow(self.embedding)
+            plt.show()
 
-    ### Load datasets (i.e., create tasks).
-    # Container for variables shared across function.
-    shared = Namespace()
-    experiment='resnet'
-    shared.experiment = experiment
-    config = train_args.parse_cmd_arguments(mode='resnet_cifar')
-    device, writer, logger = sutils.setup_environment(config, logger_name='det_cl_cifar_%s' % experiment)
-    dhandlers = tutils.load_datasets(config, shared, logger,
-                                     data_dir=DATA_DIR_CIFAR)
-    get_embedding("WTE",dhandlers,n_sample=100,device=device)
+    def get_distance(self, *args, **kwargs):
+        pass
+    
+if __name__ == "__main__":
+    WTE_emb = embedding("WTE", mode="offline")
+    WTE_emb.get_embedding()
+    H_emb = embedding("Hscore", mode="online")
