@@ -40,7 +40,7 @@ from cifar.train import train_vanilla as train_func
 
 if __name__ == '__main__':
     config = train_args.parse_cmd_arguments(mode='resnet_cifar')
-
+    print(config)
     train_func.run(config, experiment='resnet')
 
 

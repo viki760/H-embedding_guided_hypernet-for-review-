@@ -30,6 +30,7 @@ hypernet to solve a CIFAR continual learning problem.
     The module is not executable! Please refer to :mod:`cifar.train_resnet` or
     :mod:`cifar.train_zenke`.
 """
+import os
 from argparse import Namespace
 import torch
 import torch.optim as optim
@@ -864,6 +865,10 @@ def run(config, experiment='resnet'):
 
     logger.info('Program finished successfully in %f sec.'
                 % (time() - script_start))
+    # save hnet
+    if hnet is not None:
+        torch.save(hnet.state_dict(), os.path.join(config.out_dir,'/hnet.pth'))
+        logger.info('Hnet checkpoint saved.')
 
 if __name__ == '__main__':
     raise Exception('Script is not executable!')
