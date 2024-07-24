@@ -176,6 +176,8 @@ class SAHnetPart(nn.Module, CLHyperNetInterface):
         # Layer sizes.
         sizes = [[out_size[0], out_size[1]]] * (num_layers-1)
 
+        self.hidden_dim=None
+
         w = out_size[0]
         h = out_size[1]
 
@@ -336,7 +338,7 @@ class SAHnetPart(nn.Module, CLHyperNetInterface):
 
     # @override from CLHyperNetInterface
     def forward(self, task_id=None, theta=None, dTheta=None, task_emb=None,
-                ext_inputs=None, squeeze=True):
+                ext_inputs=None, squeeze=True, emb_reg=False):
         """Implementation of abstract super class method.
         
         Note, we currently assume that task embeddings have been concatenated
@@ -398,6 +400,11 @@ class SAHnetPart(nn.Module, CLHyperNetInterface):
             #h = F.batch_norm(h, bn_stats[ii], bn_stats[ii+1],
             #                 weight=bn_weights[ii], bias=bn_weights[ii+1],
             #                 training=self.training)
+        
+        self.hidden_dim = h.shape[-1]
+        if emb_reg:
+            return h
+
         h = h.view([-1, *self._fc_out_shape])
 
         ### Transpose Convolutional Layers.
@@ -542,7 +549,7 @@ class SAHyperNetwork(nn.Module, CLHyperNetInterface):
             the perturbation of the task embedding will be shared.
     """
     def __init__(self, main_dims, num_tasks, out_size=[64, 64], num_layers=5,
-                 num_filters=None, kernel_size=5, sa_units=[1, 3],
+                 num_filters=None, kernel_size=5, sa_units=[1, 3], 
                  rem_layers=[50,50,50], te_dim=8, ce_dim=8,
                  no_theta=False, init_theta=None, use_batch_norm=False,
                  use_spectral_norm=False, dropout_rate=-1,
@@ -648,8 +655,7 @@ class SAHyperNetwork(nn.Module, CLHyperNetInterface):
             self._theta_shapes += self._rem_hypernet.theta_shapes
 
     # @override from CLHyperNetInterface
-    def forward(self, task_id=None, theta=None, dTheta=None, task_emb=None,
-                ext_inputs=None, squeeze=True):
+    def forward(self, task_id=None, theta=None, dTheta=None, task_emb=None, ext_inputs=None, squeeze=True, emb_reg = False):
         """Implementation of abstract super class method.
 
         Note, this methods can't handle external inputs yet!
@@ -711,6 +717,7 @@ class SAHyperNetwork(nn.Module, CLHyperNetInterface):
         #                    'be specified.')
 
         if task_emb is None:
+            #! TODO return prev task emb for Hembedding
             task_emb = self._task_embs[task_id]
         if self.training and self._temb_std != -1:
             task_emb.add(torch.randn_like(task_emb) * self._temb_std)
@@ -751,6 +758,13 @@ class SAHyperNetwork(nn.Module, CLHyperNetInterface):
                 dTheta=rem_hnet_dTheta, task_emb=task_emb, ext_inputs=eps)
             weights = torch.cat([weights, rem_weights[0].view(1, -1)], dim=1)
 
+        if emb_reg:
+            #?
+            #TODO impact of rem_hypernet and chunking unclear
+            hidden_emb = self._hypernet.forward(task_id=None, theta=hnet_theta,
+            dTheta=hnet_dTheta, task_emb=None, ext_inputs=hnet_input, emb_reg=True)
+            return hidden_emb
+
         ### Reshape weights.
         ind = 0
         ret = []
@@ -762,7 +776,13 @@ class SAHyperNetwork(nn.Module, CLHyperNetInterface):
             ret.append(W.view(*s))
 
         return ret
+    
+    def get_hidden_dim(self):
+        return self._hypernet.hidden_dim
 
+    def get_prev_emb(self, task_id):
+        return self._task_embs[:task_id-1]
+    
     @property
     def chunk_embeddings(self):
         """Getter for read-only attribute chunk_embeddings.

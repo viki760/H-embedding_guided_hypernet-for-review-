@@ -28,6 +28,7 @@ import utils.optim_step as opstep
 import utils.hnet_regularizer as hreg
 from utils.torch_utils import get_optimizer
 from metrics.online_embedding import Hembedding as Hemb
+from train.fc_decoder import EmbDecoder
 
 
 DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
@@ -305,8 +306,14 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     if emb_reg:
         emb_data = data.next_train_batch(config.emb_data_size)
         if config.emb_metric == 'Hembedding':
-            #! not finished (pre_embs)
-            guide_emb = Hemb.get_Hembedding(dim_emb=config.emb_size, cur_data=emb_data, pre_embs=[], hnet=hnet, mnet=mnet, device=device, num_iter=config.emb_num_iter, tensorboard=False)
+            #! not tested
+            prev_emb = hnet.get_task_emb(task_id)
+            guide_emb = Hemb.get_Hembedding(dim_emb=config.emb_size, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, num_iter=config.emb_num_iter, tensorboard=False)
+
+        hidden_dim = hnet.get_hidden_dim()
+        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.emb_size).to(device)
+        decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.lr)
+        
 
     # We need to tell the main network, which batch statistics to use, in case batchnorm is used and we checkpoint the batchnorm stats.
     mnet_kwargs = {}
@@ -393,11 +400,20 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         # Compute gradients based on task loss (those used in the CL regularizer).
         loss_task.backward(retain_graph=cl_reg, create_graph=cl_reg and config.backprop_dt)
 
-        # The current task embedding only depends in the task loss, so we can update it already.
+        # The current task embedding only depends in the task & emb loss, so we can update it already.
         #! TODO add decoder loss
-        decode_emb = 0
-        loss_reg = Classifier.logit_cross_entropy_loss(decode_emb, guide_emb)
-        loss_reg.backward()
+        if emb_reg:
+            decoder.train()
+            decoder_optimizer.zero_grad()
+            hidden_emb = hnet.forward(task_id=task_id, emb_reg=True)
+            decode_emb = decoder.forward(hidden_emb)
+
+            cosine_sim = F.cosine_similarity(decode_emb, guide_emb, dim=1)
+            loss_emb = 1 - cosine_sim.mean()
+
+            loss_emb.backward()
+            decoder_optimizer.step()
+
         if emb_optimizer is not None:
             emb_optimizer.step()
 

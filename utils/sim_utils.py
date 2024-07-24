@@ -373,6 +373,8 @@ def get_hnet_model(config, num_tasks, device, mnet_shapes, cprefix=None):
             num_filters=sa_hnet_filters,
             kernel_size=sa_hnet_kernels,
             sa_units=sa_hnet_attention_layers,
+            # whether return hidden space for emb reg
+            emb_reg=gc('emb_reg'),
             # Note, we don't use an additional hypernet for the remaining
             # weights!
             #rem_layers=hnet_arch,
