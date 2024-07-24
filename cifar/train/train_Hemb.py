@@ -543,8 +543,10 @@ def test_multiple(dhandlers, mnet, hnet, device, config, shared, writer,
     logger.info('### Task-incremental learning scenario accuracies: %s ' \
                 % (str(class_accs)) + '(avg: %.3f)'
                 % (shared.summary['acc_avg_final']))
+    
+    writer.add_histogram('final/task_incremental',class_accs)
 
-    writer.add_scalar('final/task_incremental',
+    writer.add_scalar('final/task_incremental_avg',
                         shared.summary['acc_avg_final'])
 
     return task_accs, class_accs

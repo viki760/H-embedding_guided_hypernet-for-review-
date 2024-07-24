@@ -41,7 +41,7 @@ if __name__ == "__main__":
     from cifar import train_args
     from utils import sim_utils as sutils
     from argparse import Namespace
-    import torch
+    from torch.utils.tensorboard import SummaryWriter
     
     DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
 
@@ -62,5 +62,9 @@ if __name__ == "__main__":
     # with previous hnet weight
     # hnet.load_state_dict(torch.load(weights_path))
 
-    embs = get_embedding(metric="Hembedding", dim_emb=config.emb_size, dhandlers=dhandlers, hnet=hnet, mnet=mnet, device=device)
+    metric = "Hembedding"
+    writer = SummaryWriter(f"runs/{metric}")
+
+    embs = get_embedding(metric=metric, dim_emb=config.emb_size, dhandlers=dhandlers, hnet=hnet, mnet=mnet, device=device, writer=writer)
+
     

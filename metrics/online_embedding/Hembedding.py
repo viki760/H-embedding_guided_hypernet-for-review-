@@ -2,9 +2,9 @@ import torch
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
-def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=1000, tensorboard = False):
+def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=1000, tensorboard = False, writer = None):
     if tensorboard:
-        writer = SummaryWriter("runs/Hembedding")
+        assert writer is not None
     cur_dist = [get_Hscore(hnet.forward(task_emb=emb), mnet, cur_data) for emb in pre_embs]
 
     cur_emb = torch.nn.Parameter(torch.rand(dim_emb, requires_grad=True, device=device))

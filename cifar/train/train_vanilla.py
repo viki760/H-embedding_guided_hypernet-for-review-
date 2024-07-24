@@ -867,8 +867,12 @@ def run(config, experiment='resnet'):
                 % (time() - script_start))
     # save hnet
     if hnet is not None:
-        torch.save(hnet.state_dict(), os.path.join(config.out_dir,'/hnet.pth'))
-        logger.info('Hnet checkpoint saved.')
+        os.makedirs(config.out_dir, exist_ok=True)
+        try:
+            torch.save(hnet.state_dict(), os.path.join(config.out_dir, 'hnet.pth'))
+            print("Model saved successfully.")
+        except Exception as e:
+            print(f"Failed to save the model: {e}")
 
 if __name__ == '__main__':
     raise Exception('Script is not executable!')
