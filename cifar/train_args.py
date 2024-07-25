@@ -32,7 +32,7 @@ import warnings
 
 import utils.cli_args as cli
 
-def parse_cmd_arguments(mode='resnet_cifar', default=False, argv=None):
+def parse_cmd_arguments(mode='resnet_cifar', emb_reg=False, default=False, argv=None):
     """Parse command-line arguments.
 
     Args:
@@ -84,6 +84,8 @@ def parse_cmd_arguments(mode='resnet_cifar', default=False, argv=None):
             dn_iter=2000, show_use_adam=True, show_use_rmsprop=True,
             show_use_adadelta=False, show_use_adagrad=False,
             show_clip_grad_value=False, show_clip_grad_norm=False)
+        if emb_reg:
+            embedding_reg_options(parser)
 
     elif mode == 'zenke_cifar':
         dout_dir = './out_zenke/run_' + \
@@ -177,7 +179,7 @@ def embedding_reg_options(parser):
     """
     agroup = parser.add_argument_group('Embedding regularization options')
 
-    agroup.add_argument('--emb_reg', action='store_true',
+    agroup.add_argument('--emb_reg', action='store_true',default=True,
                         help='Activate embedding regularization.')
     agroup.add_argument('--emb_metric', type=str, default='Hembedding',
                         choices=['Hembedding', 'WTE'],
@@ -186,7 +188,6 @@ def embedding_reg_options(parser):
                         help='The number of data samples used for embedding measurement.')
     agroup.add_argument('--emb_num_iter', type=int, default=1000,
                         help='The number of iterations for embedding measurement.')
-    return agroup
 
 def special_init_options(agroup):
     """This is a helper function of the function `parse_cmd_arguments` to add

@@ -1,5 +1,7 @@
 import torch
 import torch.optim as optim
+import sys
+sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/metrics/online_embedding/')
 from torch.utils.tensorboard import SummaryWriter
 
 def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=1000, tensorboard = False, writer = None):
@@ -7,6 +9,7 @@ def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=100
         assert writer is not None
     cur_dist = [get_Hscore(hnet.forward(task_emb=emb), mnet, cur_data) for emb in pre_embs]
 
+    task_id = len(pre_embs)
     cur_emb = torch.nn.Parameter(torch.rand(dim_emb, requires_grad=True, device=device))
     dist_scaling = torch.tensor(1.0, requires_grad=True, device=device)
 
@@ -32,11 +35,10 @@ def get_Hembedding(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=100
         if i%50 == 0:
             print(f"Epoch {i}, Loss: {loss.item()}, Dist_scaling: {dist_scaling.item()}")
             if tensorboard:
-                writer.add_scalar("Loss",loss.item(),i)
-                writer.add_scalar("Dist_scaling",dist_scaling.item(),i)
-                writer.add_histogram("Cur_emb",cur_emb,i)
+                writer.add_scalar(f"task_{task_id}\Loss",loss.item(),i)
+                writer.add_scalar(f"task_{task_id}\Dist_scaling",dist_scaling.item(),i)
+                writer.add_histogram(f"task_{task_id}\Cur_emb",cur_emb,i)
         
-    writer.close() if tensorboard else None
     print('Finished optimization for task',len(pre_embs))
     print(f"Final Loss: {loss.item()}, Dist_scaling: {dist_scaling.item()}")
     print("Cur_emb:",cur_emb)

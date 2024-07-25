@@ -305,9 +305,10 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     ###########################################################
     if emb_reg:
         emb_data = data.next_train_batch(config.emb_data_size)
+        data.reset_batch_generator(train=True,val=False,test=False)
         if config.emb_metric == 'Hembedding':
             #! not tested
-            prev_emb = hnet.get_task_emb(task_id)
+            prev_emb = torch.stack([hnet.get_task_emb(i).detach() for i in range(task_id)])
             guide_emb = Hemb.get_Hembedding(dim_emb=config.emb_size, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, num_iter=config.emb_num_iter, tensorboard=False)
 
         hidden_dim = hnet.get_hidden_dim()
@@ -708,7 +709,7 @@ def run(config, experiment='resnet'):
             weights = [w.detach().clone().cpu() for w in weights]
             weights_after_training.append(weights)
 
-        test_acc, _ = test(j, data, mnet, hnet, device, shared, config, writer,
+        test_acc = test(j, data, mnet, hnet, device, shared, config, writer,
                            logger)
 
         logger.info('### Accuracy of task %d / %d:  %.3f' % (j+1, config.num_tasks, test_acc))

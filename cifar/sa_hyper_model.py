@@ -780,8 +780,8 @@ class SAHyperNetwork(nn.Module, CLHyperNetInterface):
     def get_hidden_dim(self):
         return self._hypernet.hidden_dim
 
-    def get_prev_emb(self, task_id):
-        return self._task_embs[:task_id-1]
+    # def get_prev_emb(self, task_id):
+    #     return self._task_embs[:task_id-1]
     
     @property
     def chunk_embeddings(self):
