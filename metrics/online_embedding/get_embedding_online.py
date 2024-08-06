@@ -68,7 +68,5 @@ if __name__ == "__main__":
     writer = SummaryWriter(f"runs/{metric}-{date_time_str}")
 
     embs = get_embedding(metric=metric, dim_emb=config.emb_size, dhandlers=dhandlers, hnet=hnet, mnet=mnet, device=device, tensorboard=True, writer=writer)
-
     writer.close()
-
     

@@ -186,7 +186,7 @@ def embedding_reg_options(parser):
                         help='The metric of guide task embeddings.')
     agroup.add_argument('--emb_data_size', type=int, default=1000,
                         help='The number of data samples used for embedding measurement.')
-    agroup.add_argument('--emb_num_iter', type=int, default=1000,
+    agroup.add_argument('--emb_num_iter', type=int, default=2000,
                         help='The number of iterations for embedding measurement.')
 
 def special_init_options(agroup):

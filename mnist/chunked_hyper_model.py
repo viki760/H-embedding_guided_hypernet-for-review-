@@ -161,7 +161,7 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
 
     # @override from CLHyperNetInterface
     def forward(self, task_id=None, theta=None, dTheta=None, task_emb=None,
-                ext_inputs=None, squeeze=True):
+                ext_inputs=None, squeeze=True, emb_reg=False):
         """Implementation of abstract super class method.
 
         Note:
@@ -180,15 +180,6 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
         if not self.has_theta and theta is None:
             raise Exception('Network was generated without internal weights. ' +
                             'Hence, "theta" option may not be None.')
-
-        if ext_inputs is not None:
-            # FIXME If this will be implemented, please consider:
-            # * batch size will have to be multiplied based on num chunk
-            #   embeddings and the number of external inputs -> large batches
-            # * noise dim must adhere correct behavior (different noise per
-            #   external input).
-            raise NotImplementedError('This hypernetwork implementation does ' +
-                'not yet support the passing of external inputs.')
 
         if theta is None:
             theta = self.theta
@@ -219,7 +210,12 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
                 
             eps = eps.expand(self._num_chunks, self._noise_dim)
             chunk_embs = torch.cat([chunk_embs, eps], dim=1)
-
+        
+        if emb_reg:
+            return self._hypernet.forward(task_id=task_id, theta=hnet_theta,
+                dTheta=hnet_dTheta, task_emb=task_emb, ext_inputs=chunk_embs,
+                emb_reg=True)
+        
         # get chunked weights from HyperNet
         weights = self._hypernet.forward(task_id=task_id, theta=hnet_theta,
             dTheta=hnet_dTheta, task_emb=task_emb, ext_inputs=chunk_embs)
@@ -237,6 +233,13 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
                 W += self._shifts[j]
             ret.append(W)
         return ret
+    
+    def get_hidden_dim(self, size_only=True):
+        """Get the hidden dimension of the hypernetwork."""
+        if size_only:
+            return len(self.forward(task_id=0, emb_reg=True).view(-1))
+        else:
+            return self.forward(task_id=0, emb_reg=True).shape
 
     # @override from CLHyperNetInterface
     @property

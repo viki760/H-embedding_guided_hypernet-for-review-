@@ -315,7 +315,7 @@ class HyperNetwork(nn.Module, CLHyperNetInterface):
 
     # @override from CLHyperNetInterface
     def forward(self, task_id=None, theta=None, dTheta=None, task_emb=None,
-                ext_inputs=None, squeeze=True):
+                ext_inputs=None, squeeze=True, emb_reg=False):
         """Implementation of abstract super class method."""
         if task_id is None and task_emb is None:
             raise Exception('The hyper network has to get either a task ID' +
@@ -393,6 +393,12 @@ class HyperNetwork(nn.Module, CLHyperNetInterface):
                 h = self._act_fn(h)
             if self._dropout is not None:
                 h = self._dropout(h)
+
+        #! TODO recheck what is h
+        if emb_reg:
+            # print('hidden layer output:', h)
+            return h
+        
         outputs = []
         j = 0
         for i in range(len(self._hidden_dims), len(self._theta_shapes),

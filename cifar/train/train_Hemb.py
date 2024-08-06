@@ -304,14 +304,17 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     ### Prepare Task Embedding for Embedding Regularization ###
     ###########################################################
     if emb_reg:
-        emb_data = data.next_train_batch(config.emb_data_size)
+        emb_data_np = data.next_train_batch(config.emb_data_size)
+        emb_data = {'X':torch.from_numpy(emb_data_np[0]).float().to(device), 'T':torch.from_numpy(emb_data_np[1]).float().to(device)}
         data.reset_batch_generator(train=True,val=False,test=False)
+
         if config.emb_metric == 'Hembedding':
             #! not tested
             prev_emb = torch.stack([hnet.get_task_emb(i).detach() for i in range(task_id)])
             guide_emb = Hemb.get_Hembedding(dim_emb=config.emb_size, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, num_iter=config.emb_num_iter, tensorboard=False)
 
         hidden_dim = hnet.get_hidden_dim()
+        logger.info('Hidden dim for task %d: %s' % (task_id, str(hnet.get_hidden_dim(size_only=False))))
         decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.emb_size).to(device)
         decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.lr)
         
@@ -406,11 +409,11 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         if emb_reg:
             decoder.train()
             decoder_optimizer.zero_grad()
-            hidden_emb = hnet.forward(task_id=task_id, emb_reg=True)
+            hidden_emb = hnet.forward(task_id=task_id, emb_reg=True).view(-1) #! flattened to fit into FC (may be modified in later trials)
             decode_emb = decoder.forward(hidden_emb)
 
-            cosine_sim = F.cosine_similarity(decode_emb, guide_emb, dim=1)
-            loss_emb = 1 - cosine_sim.mean()
+            cosine_sim = F.cosine_similarity(decode_emb, guide_emb, dim=0)
+            loss_emb = 1 - cosine_sim
 
             loss_emb.backward()
             decoder_optimizer.step()
@@ -550,8 +553,10 @@ def test_multiple(dhandlers, mnet, hnet, device, config, shared, writer,
     for j in range(num_tasks):
         data = dhandlers[j]
 
-        test_acc, _ = test(j, data, mnet, hnet, device, shared,
+        test_acc = test(j, data, mnet, hnet, device, shared,
                             config, writer, logger)
+        
+        writer.add_scalar('final/task_incremental',test_acc, j)
 
         class_accs.append(test_acc)
         shared.summary['acc_final'][j] = test_acc
@@ -560,8 +565,6 @@ def test_multiple(dhandlers, mnet, hnet, device, config, shared, writer,
     logger.info('### Task-incremental learning scenario accuracies: %s ' \
                 % (str(class_accs)) + '(avg: %.3f)'
                 % (shared.summary['acc_avg_final']))
-    
-    writer.add_histogram('final/task_incremental',class_accs)
 
     writer.add_scalar('final/task_incremental_avg',
                         shared.summary['acc_avg_final'])
@@ -742,6 +745,9 @@ def run(config, experiment='resnet'):
     ### Write final summary.
     shared.summary['finished'] = 1
     tutils.save_summary_dict(config, shared, experiment)
+    # save hnet
+    if hnet is not None:
+        torch.save(hnet.state_dict(), config.out_dir + '/hnet.pth')
 
     writer.close()
 
