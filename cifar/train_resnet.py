@@ -41,7 +41,6 @@ from cifar.train import train_Hemb as train_func
 if __name__ == '__main__':
     config = train_args.parse_cmd_arguments(mode='resnet_cifar', emb_reg=True)
     print(config)
-    config.epochs = 1
     train_func.run(config, experiment='resnet')
 
 

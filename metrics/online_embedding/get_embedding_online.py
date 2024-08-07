@@ -1,16 +1,16 @@
 
 import importlib
 
-def get_cur_embedding(metric, dim_emb, cur_data, pre_embs, hnet, mnet, device, tensorboard=False, writer=None):
+def get_cur_embedding(config, metric, cur_data, pre_embs, hnet, mnet, device, tensorboard=False, writer=None):
     # get cur emb; need to be inserted into training process
     module = importlib.import_module(f"metrics.online_embedding.{metric}")
 
     get_metric = getattr(module, f"get_{metric}")
 
-    cur_emb = get_metric(dim_emb, cur_data, pre_embs, hnet, mnet, device, num_iter=1000, tensorboard = tensorboard, writer=writer)
+    cur_emb = get_metric(config, cur_data, pre_embs, hnet, mnet, device, tensorboard = tensorboard, writer=writer)
     return cur_emb
 
-def get_embedding(metric, dim_emb, dhandlers, hnet, mnet, device,n_sample=1000, tensorboard=False, writer=None):
+def get_embedding(config, metric, dhandlers, hnet, mnet, device, n_sample=1000, tensorboard=False, writer=None):
     # get embedding for each task
     # get all embedding at once (without embedding update by hnet), for testing & baseline only
     # if n_sample == None, all data will be used for embedding measurement 
@@ -27,7 +27,7 @@ def get_embedding(metric, dim_emb, dhandlers, hnet, mnet, device,n_sample=1000, 
         T = dhandler.output_to_torch_tensor(cur_data[1], device, mode='train')
         cur_data = {'X':X,'T':T}
         # dim_label = cur_data['T'].shape[-1]
-        cur_emb = get_cur_embedding(metric, dim_emb, cur_data, embeddings, hnet, mnet, device=device, tensorboard = tensorboard, writer=writer)
+        cur_emb = get_cur_embedding(config, metric, cur_data, embeddings, hnet, mnet, device=device, tensorboard = tensorboard, writer=writer)
         embeddings.append(cur_emb)
 
     print(f"Embedding: {embeddings}")
@@ -67,6 +67,6 @@ if __name__ == "__main__":
     date_time_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     writer = SummaryWriter(f"runs/{metric}-{date_time_str}")
 
-    embs = get_embedding(metric=metric, dim_emb=config.emb_size, dhandlers=dhandlers, hnet=hnet, mnet=mnet, device=device, tensorboard=True, writer=writer)
+    embs = get_embedding(metric=metric, dim_emb=config, dhandlers=dhandlers, hnet=hnet, mnet=mnet, device=device, tensorboard=True, writer=writer)
     writer.close()
     

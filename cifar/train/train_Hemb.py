@@ -311,7 +311,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         if config.emb_metric == 'Hembedding':
             #! not tested
             prev_emb = torch.stack([hnet.get_task_emb(i).detach() for i in range(task_id)])
-            guide_emb = Hemb.get_Hembedding(dim_emb=config.emb_size, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, num_iter=config.emb_num_iter, tensorboard=False)
+            guide_emb = Hemb.get_Hembedding(config, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, tensorboard=False)
 
         hidden_dim = hnet.get_hidden_dim()
         logger.info('Hidden dim for task %d: %s' % (task_id, str(hnet.get_hidden_dim(size_only=False))))
@@ -415,6 +415,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
             cosine_sim = F.cosine_similarity(decode_emb, guide_emb, dim=0)
             loss_emb = 1 - cosine_sim
 
+            loss_emb = min(config.emb_beta * task_id, 1.0) * loss_emb
             loss_emb.backward()
             decoder_optimizer.step()
 

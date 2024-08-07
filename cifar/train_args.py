@@ -188,6 +188,16 @@ def embedding_reg_options(parser):
                         help='The number of data samples used for embedding measurement.')
     agroup.add_argument('--emb_num_iter', type=int, default=2000,
                         help='The number of iterations for embedding measurement.')
+    agroup.add_argument('--emb_beta', type=float, default=0.2,
+                        help='The beta for embedding loss.')
+    agroup.add_argument('--emb_lr', type=float, default=0.001,
+                        help='The learning rate for embedding measurement.')
+    agroup.add_argument('--emb_epsilon', type=float, default=0.1,
+                        help='The epsilon for embedding measurement.')
+    agroup.add_argument('--emb_mode', type=str, default='direct',
+                        choices=['direct', 'reciprocal'],
+                        help='The mode for embedding measurement.')
+    
 
 def special_init_options(agroup):
     """This is a helper function of the function `parse_cmd_arguments` to add
