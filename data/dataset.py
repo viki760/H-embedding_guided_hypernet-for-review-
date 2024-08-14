@@ -61,6 +61,7 @@ from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy.matlib as npm
+import os
 
 class Dataset(ABC):
     """A general dataset template that can be used as a simple and consistent
@@ -109,6 +110,10 @@ class Dataset(ABC):
     def __init__(self):
         # Internally, everything is stored in a certain structure, such that it
         # can easily be backuped (for instance via pickle).
+
+
+        np.random.seed(int(os.environ['PYTHONHASHSEED']))
+
         data = {}
 
         # Boolean: See attribute "classification".
@@ -342,6 +347,8 @@ class Dataset(ABC):
             - **batch_outputs**: The outputs of the samples belonging to the
               batch.
         """
+        np.random.seed(int(os.environ['PYTHONHASHSEED']))
+
         if self._batch_gen_train is None:
             self.reset_batch_generator(train=True, test=False, val=False)
 
@@ -365,6 +372,8 @@ class Dataset(ABC):
             - **batch_inputs**
             - **batch_outputs**
         """
+        np.random.seed(int(os.environ['PYTHONHASHSEED']))
+
         if self._batch_gen_test is None:
             self.reset_batch_generator(train=False, test=True, val=False)
 
@@ -390,6 +399,9 @@ class Dataset(ABC):
 
             Returns ``None`` if no validation set exists.
         """
+        
+        np.random.seed(int(os.environ['PYTHONHASHSEED']))
+
         if self._data['val_inds'] is None:
             return None
 

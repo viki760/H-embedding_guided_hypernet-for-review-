@@ -102,10 +102,10 @@ def test(task_id, data, mnet, hnet, device, shared, config, writer, logger,
 
         if test_size is None or test_size >= data.num_test_samples:
             test_size = data.num_test_samples
-        else:
-            # Make sure that we always use the same test samples.
-            data.reset_batch_generator(train=False, test=True, val=False)
-            logger.info(f'Only {test_size}/{data.num_test_samples} of test set is used for this test run.')
+            
+        # Make sure that we always use the same test samples.
+        data.reset_batch_generator(train=False, test=True, val=False)
+        logger.info(f'{test_size}/{data.num_test_samples} of test set is used for this test run.')
 
         test_loss = 0.0
 
@@ -309,14 +309,14 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         data.reset_batch_generator(train=True,val=False,test=False)
 
         if config.emb_metric == 'Hembedding':
-            #! not tested
+            #* default, only emplemented Hembedding
             prev_emb = torch.stack([hnet.get_task_emb(i).detach() for i in range(task_id)])
             guide_emb = Hemb.get_Hembedding(config, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, tensorboard=False)
 
         hidden_dim = hnet.get_hidden_dim()
         logger.info('Hidden dim for task %d: %s' % (task_id, str(hnet.get_hidden_dim(size_only=False))))
         decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.emb_size).to(device)
-        decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.lr)
+        decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.emb_lr)
         
 
     # We need to tell the main network, which batch statistics to use, in case batchnorm is used and we checkpoint the batchnorm stats.
@@ -405,7 +405,8 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         loss_task.backward(retain_graph=cl_reg, create_graph=cl_reg and config.backprop_dt)
 
         # The current task embedding only depends in the task & emb loss, so we can update it already.
-        #! TODO add decoder loss
+        loss_emb = 0
+        # add decoder loss
         if emb_reg:
             decoder.train()
             decoder_optimizer.zero_grad()
@@ -433,8 +434,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
                 dTembs = None
                 dTheta = None
             else:
-                dTheta = opstep.calc_delta_theta(theta_optimizer, False,
-                    lr=config.lr, detach_dt=not config.backprop_dt)
+                dTheta = opstep.calc_delta_theta(theta_optimizer, False, lr=config.lr, detach_dt=not config.backprop_dt)
 
                 if config.continue_emb_training:
                     dTembs = dTheta[-task_id:]
@@ -505,6 +505,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
             writer.add_scalar('train/task_%d/class_accuracy' % task_id, classifier_accuracy, i)
             writer.add_scalar('train/task_%d/loss_task' % task_id, loss_task, i)
             writer.add_scalar('train/task_%d/loss_reg' % task_id, loss_reg, i)
+            writer.add_scalar('train/task_%d/loss_emb' % task_id, loss_emb, i)
 
         ### Show the current training progress to the user.
         if i % config.val_iter == 0:
