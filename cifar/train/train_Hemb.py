@@ -476,7 +476,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
                 # accuracy instead.
                 # FIXME We increase `train_iter` as the print messages in the
                 # test method suggest that the testing has been executed before
-                test_acc, _ = test(task_id, data, mnet, hnet, device, shared,
+                test_acc = test(task_id, data, mnet, hnet, device, shared,
                                    config, writer, logger, train_iter=i+1)
                 mnet.train()
                 if hnet is not None:
