@@ -70,7 +70,7 @@ def parse_cmd_arguments(mode='resnet_cifar', emb_reg=False, default=False, argv=
         cl_group = cli.cl_args(parser, show_beta=True, dbeta=0.05,
             show_from_scratch=True, show_multi_head=False,
             show_cl_scenario=True, show_split_head_cl3=False,
-            show_num_tasks=True, dnum_tasks=6)
+            show_num_tasks=True, dnum_tasks=11)
         cli.main_net_args(parser, allowed_nets=['resnet'], show_batchnorm=False,
             show_no_batchnorm=True, show_bn_no_running_stats=True,
             show_bn_distill_stats=True, show_bn_no_stats_checkpointing=True,
