@@ -57,7 +57,7 @@ def set_random_seeds(seed):
 if __name__ == '__main__':
     config = train_args.parse_cmd_arguments(mode='resnet_cifar', emb_reg=True)
     config.emb_reg = True
-    config.epochs = 1
+    config.epochs = 100
     print(config)
 
     set_random_seeds(config.random_seed)
