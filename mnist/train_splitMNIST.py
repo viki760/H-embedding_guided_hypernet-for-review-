@@ -36,7 +36,7 @@ for an overview how to use this script.
 import __init__ # pylint: disable=unused-import
 
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 
 import torch
 import torch.optim as optim
@@ -49,6 +49,9 @@ from mnist.replay.train_gan import sample as sample_gan, train_gan_one_t
 from mnist.replay.train_replay import run as replay_model
 from mnist.replay.train_replay import train_vae_one_t, init_plotting_embedding
 from mnist.replay.train_replay import sample as sample_vae
+
+from metrics.online_embedding import Hembedding as Hemb
+from cifar.train.fc_decoder import EmbDecoder
 
 from mnist.train_args_default import _set_default
 from mnist import train_utils
@@ -620,13 +623,29 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
 
     # Whether we will calculate the regularizer.
     calc_reg = t > 0 and config.class_beta > 0 and config.training_with_hnet
-
+    emb_reg = t>1 and config.emb_reg
     # set if we want the reg only computed for a subset of the  previous tasks
     if config.hnet_reg_batch_size != -1:
         hnet_reg_batch_size = config.hnet_reg_batch_size
     else:
         hnet_reg_batch_size = None
     
+    #! emb_reg preparation
+    if emb_reg:
+        emb_data_np = dhandler_class.next_train_batch(config.emb_data_size)
+        emb_data = {'X':torch.from_numpy(emb_data_np[0]).float().to(device), 'T':torch.from_numpy(emb_data_np[1]).float().to(device)}
+        dhandler_class.reset_batch_generator(train=True,val=False,test=False)
+
+        if config.emb_metric == 'Hembedding':
+            #* default, only emplemented Hembedding
+            prev_emb = torch.stack([net_hnet.get_task_emb(i).detach() for i in range(t)])
+            guide_emb = Hemb.get_Hembedding(config, cur_data=emb_data, pre_embs=prev_emb, hnet=net_hnet, mnet=net, device=device, tensorboard=False)
+
+        hidden_dim = net_hnet.get_hidden_dim()
+        print('Hidden dim for task %d: %s' % (t, str(net_hnet.get_hidden_dim(size_only=False))))
+        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.rp_temb_size).to(device)
+        decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.emb_lr)
+
     for i in range(training_iterations):
 
         # set optimizer to zero
@@ -652,7 +671,7 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
 
         # If we train a task inference net or class incremental learning we 
         # we construct a target for every single class/task
-        if config.class_incremental or config.training_task_infer:
+        if config.class_incremental or config.training_task_infer: #* skip
             # in the beginning of training, we look at two output neuron
             task_out = [0, t+1]
             T_real = torch.zeros((config.batch_size, task_out[1])).to(device)
@@ -706,7 +725,7 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
         ############################
 
         # Get fake data (of all tasks up until now and merge into list)
-        if t >= 1 and not config.training_with_hnet:
+        if t >= 1 and not config.training_with_hnet: #* skip
             fake_loss = get_fake_data_loss(dhandlers_rp, net, dec,d_hnet,device, 
                                         config, writer, t, i, net_copy)
             loss_task = (1-config.l_rew)*loss_task + config.l_rew*fake_loss
@@ -716,6 +735,7 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
                            config.backprop_dt)
      
         # compute hypernet loss and fix embedding -> change current embs
+        loss_reg = 0
         if calc_reg:
             if config.no_lookahead:
                 dTheta = None
@@ -729,6 +749,21 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
                         batch_size=hnet_reg_batch_size)
             loss_reg.backward()
 
+        loss_emb = 0
+        #! add decoder loss
+        if emb_reg:
+            decoder.train()
+            decoder_optimizer.zero_grad()
+            hidden_emb = net_hnet.forward(task_id=t, emb_reg=True).view(-1) #! flattened to fit into FC (may be modified in later trials)
+            decode_emb = decoder.forward(hidden_emb)
+
+            cosine_sim = F.cosine_similarity(decode_emb, guide_emb, dim=0)
+            loss_emb = 1 - cosine_sim
+
+            loss_emb = min(config.emb_beta * t, 1.0) * loss_emb
+            loss_emb.backward()
+            decoder_optimizer.step()
+        
         # compute backward passloss_task.backward()
         if not config.dont_train_main_model:
             optimizer.step()
@@ -747,6 +782,8 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
                                                     classifier_accuracy, i)
             writer.add_scalar('train/task_%d/loss_task' % t,
                                                     loss_task, i)
+            writer.add_scalar('train/task_%d/loss_reg' % t, loss_reg, i)
+            # writer.add_scalar('train/task_%d/loss_emb' % t, loss_emb, i)
             if t >= 1 and not config.training_with_hnet:
                 writer.add_scalar('train/task_%d/fake_loss' % t,
                                                     fake_loss, i)
@@ -810,7 +847,7 @@ def train_tasks(dhandlers_class, dhandlers_rp, enc, dec, d_hnet, class_net,
     print('Training MNIST (task inference) classifier ...')
     
     if not (config.upper_bound or (config.infer_task_id and 
-                                                      config.cl_scenario == 1)):
+                                                      config.cl_scenario == 1)): # Skipped for our setting
             if not config.trained_replay_model:
                 embd_list = init_plotting_embedding(dhandlers_rp, 
                                                         d_hnet, writer, config)
@@ -848,7 +885,7 @@ def train_tasks(dhandlers_class, dhandlers_rp, enc, dec, d_hnet, class_net,
     
     return during_accs
 
-def run(mode='split'):  
+def run(config):  
 
     """ Method to start MNIST experiments. 
     Depending on the configurations, here we control the creation and 
@@ -857,19 +894,15 @@ def run(mode='split'):
     corresponding hypernetworks.
 
     Args:
-        mode (str): Training mode defines which experiments and default values 
-        are loaded. Options are splitMNIST or permutedMNIST:
-
-                - ``split``
-                - ``perm``
+        config
     """
     
-    ### Get command line arguments.
-    config = train_args.parse_cmd_arguments(mode=mode)
+    # ### Get command line arguments.
+    # config = train_args.parse_cmd_arguments(mode=mode)
    
     assert(config.experiment == "splitMNIST" or \
                                           config.experiment == "permutedMNIST")
-    if not config.dont_set_default:
+    if not config.dont_set_default: #!turn to false when tuning
         config = _set_default(config)
 
     if config.infer_output_head:

@@ -126,7 +126,7 @@ def _set_default_permuted(config):
     config.class_lr, config.class_lr_emb = 0.0001, 0.0001
     config.n_iter = 5000
     config.batch_size = 128
-    config.data_dir = '../datasets'
+    # config.data_dir = '../datasets'
     config.padding = 2
     config.no_lookahead = False
 

@@ -363,7 +363,7 @@ hyper_shapes_distilled` and the current statistics will be returned by the
 
         self._is_properly_setup()
 
-    def forward(self, x, weights=None, distilled_params=None, condition=None):
+    def forward(self, x, weights=None, distilled_params=None, condition=None, return_features=False):
         """Compute the output :math:`y` of this network given the input
         :math:`x`.
 
@@ -551,6 +551,9 @@ hyper_shapes_distilled` and the current statistics will be returned by the
         ### Forward Computation ###
         ###########################
         hidden = x
+
+        if return_features:
+            return hidden
 
         # Context-dependent modulation of inputs directly.
         if self._use_context_mod and self._context_mod_inputs:

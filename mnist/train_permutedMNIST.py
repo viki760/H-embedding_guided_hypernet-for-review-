@@ -35,8 +35,37 @@ Start training by executing the following command:
 """
 # Do not delete the following import for all executable scripts!
 import __init__ # pylint: disable=unused-import
+import sys
+import os
+sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/')
 
-from mnist.train_splitMNIST import run
+import mnist.train_splitMNIST as train_func
+from mnist import train_args 
+
+import torch
+import numpy as np
+import random
+
+def set_random_seeds(seed):
+    ###! Random seed setup
+    torch.manual_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
 
 if __name__ == '__main__':
-    run(mode='perm')
+    ### Get command line arguments.
+    config = train_args.parse_cmd_arguments(mode="perm", emb_reg=True)
+    config.data_dir = "/mnt/d/task/research/codes/HyperNet/hypercl/datasets/"
+    config.infer_task_id = True
+    config.emb_size = config.rp_temb_size
+    # config.epochs=1
+    print(config)
+    set_random_seeds(config.random_seed)
+    train_func.run(config)

@@ -36,7 +36,7 @@ import utils.cli_args as cli
 from mnist.replay.train_args_replay import collect_rp_cmd_arguments, \
                                                              train_args_replay
 
-def parse_cmd_arguments(mode='split', default=False, argv=None):
+def parse_cmd_arguments(mode='split', default=False, emb_reg=False, argv=None):
      """Parse command-line arguments.
 
      Args:
@@ -62,6 +62,9 @@ def parse_cmd_arguments(mode='split', default=False, argv=None):
           raise Exception('Mode "%s" unknown.' % (mode))
 
      parser = collect_rp_cmd_arguments(mode=mode, description=description)
+
+     if emb_reg:
+          embedding_reg_options(parser)
 
      # If needed, add additional parameters.
      if mode == 'split':
@@ -100,6 +103,35 @@ def parse_cmd_arguments(mode='split', default=False, argv=None):
                raise ValueError('SplitMNIST may have maximally 5 tasks.')
 
      return config
+
+def embedding_reg_options(parser):
+    """This is a helper function of the function `parse_cmd_arguments` to add
+    arguments to the `embedding regularization` argument group.
+
+    Args:
+        parser (:class:`argparse.ArgumentParser`): The argument parser to which
+            the argument group should be added.
+    """
+    agroup = parser.add_argument_group('Embedding regularization options')
+
+    agroup.add_argument('--emb_reg', action='store_true',default=True,
+                        help='Activate embedding regularization.')
+    agroup.add_argument('--emb_metric', type=str, default='Hembedding',
+                        choices=['Hembedding', 'WTE'],
+                        help='The metric of guide task embeddings.')
+    agroup.add_argument('--emb_data_size', type=int, default=1000,
+                        help='The number of data samples used for embedding measurement.')
+    agroup.add_argument('--emb_num_iter', type=int, default=2000,
+                        help='The number of iterations for embedding measurement.')
+    agroup.add_argument('--emb_beta', type=float, default=0.2,
+                        help='The beta for embedding loss.')
+    agroup.add_argument('--emb_lr', type=float, default=0.001,
+                        help='The learning rate for embedding measurement.')
+    agroup.add_argument('--emb_epsilon', type=float, default=0.1,
+                        help='The epsilon for embedding measurement.')
+    agroup.add_argument('--emb_mode', type=str, default='direct',
+                        choices=['direct', 'reciprocal'],
+                        help='The mode for embedding measurement.')
      
 def cl_arguments_general(parser):
      """This is a helper method of the method parse_cmd_arguments to add
