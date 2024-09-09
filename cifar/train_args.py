@@ -93,7 +93,7 @@ def parse_cmd_arguments(mode='resnet_cifar', emb_reg=False, default=False, argv=
         cl_group = cli.cl_args(parser, show_beta=True, dbeta=0.01,
             show_from_scratch=True, show_multi_head=False,
             show_cl_scenario=True, show_split_head_cl3=False,
-            show_num_tasks=True, dnum_tasks=6)
+            show_num_tasks=True, dnum_tasks=11)
         cli.main_net_args(parser, allowed_nets=['zenke'], show_batchnorm=False,
             show_no_batchnorm=False, show_dropout_rate=True, ddropout_rate=0.25,
             show_specnorm=False, show_net_act=False)
@@ -189,7 +189,7 @@ def embedding_reg_options(parser):
                         help='The number of data samples used for embedding measurement.')
     agroup.add_argument('--emb_num_iter', type=int, default=2000,
                         help='The number of iterations for embedding measurement.')
-    agroup.add_argument('--emb_beta', type=float, default=0.2,
+    agroup.add_argument('--emb_beta', type=float, default=0.05,
                         help='The beta for embedding loss.')
     agroup.add_argument('--emb_lr', type=float, default=0.001,
                         help='The learning rate for embedding measurement.')
