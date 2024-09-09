@@ -315,7 +315,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
 
         hidden_dim = hnet.get_hidden_dim()
         logger.info('Hidden dim for task %d: %s' % (task_id, str(hnet.get_hidden_dim(size_only=False))))
-        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.emb_size).to(device)
+        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.temb_size).to(device)
         decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.emb_lr)
         
 

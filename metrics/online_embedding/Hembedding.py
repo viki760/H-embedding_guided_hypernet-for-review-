@@ -20,7 +20,7 @@ def get_Hembedding(config, cur_data, pre_embs, hnet, mnet, device, tensorboard =
     
     
     task_id = len(pre_embs)
-    cur_emb = torch.nn.Parameter(torch.rand(config.emb_size, requires_grad=True, device=device))
+    cur_emb = torch.nn.Parameter(torch.rand(config.temb_size, requires_grad=True, device=device))
     dist_scaling = torch.tensor(1.0, requires_grad=True, device=device)
 
     if len(pre_embs) == 0:

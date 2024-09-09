@@ -84,8 +84,7 @@ def parse_cmd_arguments(mode='resnet_cifar', emb_reg=False, default=False, argv=
             dn_iter=2000, show_use_adam=True, show_use_rmsprop=True,
             show_use_adadelta=False, show_use_adagrad=False,
             show_clip_grad_value=False, show_clip_grad_norm=False)
-        if emb_reg:
-            embedding_reg_options(parser)
+    
 
     elif mode == 'zenke_cifar':
         dout_dir = './out_zenke/run_' + \
@@ -108,6 +107,8 @@ def parse_cmd_arguments(mode='resnet_cifar', emb_reg=False, default=False, argv=
             show_use_adadelta=False, show_use_adagrad=False,
             show_clip_grad_value=False, show_clip_grad_norm=False)
 
+    if emb_reg:
+        embedding_reg_options(parser)
     special_cl_options(cl_group)
     special_train_options(train_agroup)
     init_group = cli.init_args(parser, custom_option=True)

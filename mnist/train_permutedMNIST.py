@@ -64,7 +64,7 @@ if __name__ == '__main__':
     config = train_args.parse_cmd_arguments(mode="perm", emb_reg=True)
     config.data_dir = "/mnt/d/task/research/codes/HyperNet/hypercl/datasets/"
     config.infer_task_id = True
-    config.emb_size = config.rp_temb_size
+    config.temb_size = config.rp_temb_size
     # config.epochs=1
     print(config)
     set_random_seeds(config.random_seed)

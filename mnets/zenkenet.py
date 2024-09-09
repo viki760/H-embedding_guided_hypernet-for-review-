@@ -168,7 +168,7 @@ class ZenkeNet(Classifier):
 
         self._is_properly_setup()
 
-    def forward(self, x, weights=None, distilled_params=None, condition=None):
+    def forward(self, x, weights=None, distilled_params=None, condition=None, return_features=False):
         """Compute the output :math:`y` of this network given the input
         :math:`x`.
 
@@ -228,7 +228,10 @@ class ZenkeNet(Classifier):
             h = self._drop_conv(h)
 
         # last fully connected layers
-        h = h.view(-1, weights[8].size()[1])
+        h = h.reshape(-1, weights[8].size()[1])
+        if return_features:
+            return h
+
         h = F.relu(F.linear(h, weights[8], bias=weights[9]))
         if self._use_dropout:
             h = self._drop_fc1(h)
