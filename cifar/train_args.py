@@ -98,7 +98,7 @@ def parse_cmd_arguments(mode='resnet_cifar', emb_reg=False, default=False, argv=
             show_no_batchnorm=False, show_dropout_rate=True, ddropout_rate=0.25,
             show_specnorm=False, show_net_act=False)
         cli.hypernet_args(parser, dhyper_chunks=5500, dhnet_arch='100,150,200',
-                          dtemb_size=48, demb_size=80)
+                          dtemb_size=32, demb_size=80)
         cli.data_args(parser, show_disable_data_augmentation=True)
         train_agroup = cli.train_args(parser, show_lr=True, dlr=0.0001,
             show_epochs=True, depochs=80, dbatch_size=256,

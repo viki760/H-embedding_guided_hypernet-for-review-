@@ -13,6 +13,7 @@ hypernet to solve a CIFAR continual learning problem.
 """
 import sys
 sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/')
+import os
 
 from argparse import Namespace
 import torch
@@ -175,7 +176,7 @@ def test(task_id, data, mnet, hnet, device, shared, config, writer, logger,
 
         return test_acc
 
-def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
+def train(task_id, data, mnet, hnet, device, config, shared, writer, logger, start_generate=None, gdata_size=1000):
     """Train the hyper network using the task-specific loss plus a regularizer
     that should overcome catastrophic forgetting.
 
@@ -192,9 +193,12 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         writer: The tensorboard summary writer.
         logger: The logger that should be used rather than the print method.
     """
+    assert(start_generate is None or start_generate > 3)
+    is_generate = start_generate is not None and task_id >= start_generate
+
     start_time = time()
 
-    logger.info('Training network ...')
+    logger.info('Training network ...') if not is_generate else logger.info(f"Generating for task {task_id} with data size {gdata_size} ...")
 
     #################
     ### Optimizer ###
@@ -203,76 +207,122 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     #TODO: check the forward of Hnet class
     #! TODO: add decoder for hidden space
     #* Add all previous task embedding to parameters but only get emb optimizer for current embedding
-    mnet.train()
-    if hnet is not None:
-        hnet.train()
-        theta_params = list(hnet.theta)
+    if not is_generate:
+        mnet.train()  
+        if hnet is not None:
+            hnet.train()
+            theta_params = list(hnet.theta)
 
-        if config.continue_emb_training:
-            for i in range(task_id): # for all previous task embeddings
-                theta_params.append(hnet.get_task_emb(i))
+            if config.continue_emb_training:
+                for i in range(task_id): # for all previous task embeddings
+                    theta_params.append(hnet.get_task_emb(i))
 
-        # Only for the current task embedding.
-        # Important that this embedding is in a different optimizer in case we use the lookahead.
-        emb_optimizer = get_optimizer([hnet.get_task_emb(task_id)],
-            config.lr, momentum=config.momentum,
-            weight_decay=config.weight_decay, use_adam=config.use_adam,
-            adam_beta1=config.adam_beta1, use_rmsprop=config.use_rmsprop)
+            # Only for the current task embedding.
+            # Important that this embedding is in a different optimizer in case we use the lookahead.
+            emb_optimizer = get_optimizer([hnet.get_task_emb(task_id)],
+                config.lr, momentum=config.momentum,
+                weight_decay=config.weight_decay, use_adam=config.use_adam,
+                adam_beta1=config.adam_beta1, use_rmsprop=config.use_rmsprop)
+        else:
+            theta_params = mnet.weights
+            emb_optimizer = None
+
+        theta_optimizer = get_optimizer(theta_params, config.lr, momentum=config.momentum, weight_decay=config.weight_decay, use_adam=config.use_adam, adam_beta1=config.adam_beta1, use_rmsprop=config.use_rmsprop)
+    
     else:
-        theta_params = mnet.weights
-        emb_optimizer = None
+        mnet.eval()
+        if hnet is not None:
+            hnet.eval()
+            emb_optimizer = get_optimizer([hnet.get_task_emb(task_id)],
+                    config.lr, momentum=config.momentum,
+                    weight_decay=config.weight_decay, use_adam=config.use_adam,
+                    adam_beta1=config.adam_beta1, use_rmsprop=config.use_rmsprop)
+        else: # not exist
+            raise ValueError("hnet is None, cannot proceed to generate")
 
-    theta_optimizer = get_optimizer(theta_params, config.lr,
-        momentum=config.momentum, weight_decay=config.weight_decay,
-        use_adam=config.use_adam, adam_beta1=config.adam_beta1,
-        use_rmsprop=config.use_rmsprop)
+
 
     ################################
     ### Learning rate schedulers ###
     ################################
-    if config.plateau_lr_scheduler:
-        assert(config.epochs != -1)
-        # The scheduler config has been taken from https://keras.io/examples/cifar10_resnet/
-        # We use 'max' instead of 'min' as we look at accuracy rather than validation loss!
-        plateau_scheduler_theta = optim.lr_scheduler.ReduceLROnPlateau( \
-            theta_optimizer, 'max', factor=np.sqrt(0.1), patience=5,
-            min_lr=0.5e-6, cooldown=0)
-        plateau_scheduler_emb = None
-        if emb_optimizer is not None:
-            plateau_scheduler_emb = optim.lr_scheduler.ReduceLROnPlateau( \
-                emb_optimizer, 'max', factor=np.sqrt(0.1), patience=5,
+    if not is_generate:
+        if config.plateau_lr_scheduler:
+            assert(config.epochs != -1)
+            # The scheduler config has been taken from https://keras.io/examples/cifar10_resnet/
+            # We use 'max' instead of 'min' as we look at accuracy rather than validation loss!
+            plateau_scheduler_theta = optim.lr_scheduler.ReduceLROnPlateau( \
+                theta_optimizer, 'max', factor=np.sqrt(0.1), patience=5,
                 min_lr=0.5e-6, cooldown=0)
+            plateau_scheduler_emb = None
+            if emb_optimizer is not None:
+                plateau_scheduler_emb = optim.lr_scheduler.ReduceLROnPlateau( \
+                    emb_optimizer, 'max', factor=np.sqrt(0.1), patience=5,
+                    min_lr=0.5e-6, cooldown=0)
 
-    if config.lambda_lr_scheduler:
-        assert(config.epochs != -1)
+        if config.lambda_lr_scheduler:
+            assert(config.epochs != -1)
 
-        def lambda_lr(epoch):
-            """Multiplicative Factor for Learning Rate Schedule.
+            def lambda_lr(epoch):
+                """Multiplicative Factor for Learning Rate Schedule.
 
-            Computes a multiplicative factor for the initial learning rate based
-            on the current epoch. This method can be used as argument
-            ``lr_lambda`` of class :class:`torch.optim.lr_scheduler.LambdaLR`.
+                Computes a multiplicative factor for the initial learning rate based
+                on the current epoch. This method can be used as argument
+                ``lr_lambda`` of class :class:`torch.optim.lr_scheduler.LambdaLR`.
 
-            The schedule is inspired by the Resnet CIFAR-10 schedule suggested
-            here https://keras.io/examples/cifar10_resnet/.
+                The schedule is inspired by the Resnet CIFAR-10 schedule suggested
+                here https://keras.io/examples/cifar10_resnet/.
 
-            In: epoch (int): The number of epochs -> Out: lr_scale (float32): learning rate scale
-            """
-            lr_scale = 1.
-            if epoch > 180:
-                lr_scale = 0.5e-3
-            elif epoch > 160:
-                lr_scale = 1e-3
-            elif epoch > 120:
-                lr_scale = 1e-2
-            elif epoch > 80:
-                lr_scale = 1e-1
-            return lr_scale
+                In: epoch (int): The number of epochs -> Out: lr_scale (float32): learning rate scale
+                """
+                lr_scale = 1.
+                if epoch > 180:
+                    lr_scale = 0.5e-3
+                elif epoch > 160:
+                    lr_scale = 1e-3
+                elif epoch > 120:
+                    lr_scale = 1e-2
+                elif epoch > 80:
+                    lr_scale = 1e-1
+                return lr_scale
 
-        lambda_scheduler_theta = optim.lr_scheduler.LambdaLR(theta_optimizer, lambda_lr)
-        lambda_scheduler_emb = None
-        if emb_optimizer is not None:
-            lambda_scheduler_emb = optim.lr_scheduler.LambdaLR(emb_optimizer, lambda_lr)
+            lambda_scheduler_emb = None 
+            lambda_scheduler_theta = None
+            if theta_optimizer is not None:
+                lambda_scheduler_theta = optim.lr_scheduler.LambdaLR(theta_optimizer, lambda_lr)
+            if emb_optimizer is not None:
+                lambda_scheduler_emb = optim.lr_scheduler.LambdaLR(emb_optimizer, lambda_lr)
+
+    ###################################
+    ### Generation without Training ###
+    ###################################
+
+    if is_generate:
+        gen_data_np = data.next_train_batch(gdata_size)
+        gen_data = {'X':torch.from_numpy(gen_data_np[0]).float().to(device), 'T':torch.from_numpy(gen_data_np[1]).float().to(device)}
+        data.reset_batch_generator(train=True,val=False,test=False)
+        if config.emb_metric == 'Hembedding':
+            #* default, only emplemented Hembedding
+            prev_emb = torch.stack([hnet.get_task_emb(i).detach() for i in range(task_id)])
+            guide_emb = Hemb.get_Hembedding(config, cur_data=gen_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, tensorboard=False)
+
+        hidden_dim = hnet.get_hidden_dim()
+        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.temb_size).to(device)
+        decoder.load_state_dict(torch.load(os.path.join(config.out_dir, 'decoder_state_dict.pth'), weights_only=True))   
+        decoder.eval()
+        for i in range(config.emb_num_iter):
+            emb_optimizer.zero_grad()
+            hidden_emb = hnet.forward(task_id=task_id, emb_reg=True).view(-1) #! flattened to fit into FC (may be modified in later trials)
+            decode_emb = decoder.forward(hidden_emb)
+
+            cosine_sim = F.cosine_similarity(decode_emb, guide_emb, dim=0)
+            loss_emb = 1 - cosine_sim
+            loss_emb.backward()
+            emb_optimizer.step()
+
+            if i % 200 == 0:
+                logger.info('Training step: %d ... Done -- ' % (i))
+
+        return guide_emb
 
     ##############################
     ### Prepare CL Regularizer ###
@@ -303,6 +353,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     ###########################################################
     ### Prepare Task Embedding for Embedding Regularization ###
     ###########################################################
+    guide_emb = None
     if emb_reg:
         emb_data_np = data.next_train_batch(config.emb_data_size)
         emb_data = {'X':torch.from_numpy(emb_data_np[0]).float().to(device), 'T':torch.from_numpy(emb_data_np[1]).float().to(device)}
@@ -312,8 +363,6 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
             #* default, only emplemented Hembedding
             prev_emb = torch.stack([hnet.get_task_emb(i).detach() for i in range(task_id)])
             guide_emb = Hemb.get_Hembedding(config, cur_data=emb_data, pre_embs=prev_emb, hnet=hnet, mnet=mnet, device=device, tensorboard=False)
-        elif config.emb_metric == 'random':
-            guide_emb = torch.randn(config.temb_size).to(device)
 
         hidden_dim = hnet.get_hidden_dim()
         logger.info('Hidden dim for task %d: %s' % (task_id, str(hnet.get_hidden_dim(size_only=False))))
@@ -520,6 +569,9 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
         if i % 200 == 0:
             logger.info('Training step: %d ... Done -- (runtime: %f sec)' % \
                         (i, iter_end_time - iter_start_time))
+            
+    if task_id+1 == start_generate:
+        torch.save(decoder.state_dict(), os.path.join(config.out_dir, 'decoder_state_dict.pth'))
 
     if mnet.batchnorm_layers is not None:
         if not config.bn_distill_stats and \
@@ -535,6 +587,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
 
     logger.info('Elapsed time for training task %d: %f sec.' % \
                 (task_id+1, time()-start_time))
+    return guide_emb if guide_emb is not None else hnet.get_task_emb(task_id).detach()
 
 def test_multiple(dhandlers, mnet, hnet, device, config, shared, writer,
                   logger):
@@ -674,6 +727,7 @@ def run(config, experiment='resnet'):
 
     # We keep the hnet output right after training to measure forgetting.
     weights_after_training = []
+    guide_embs = []
 
     ######################
     ### Start Training ###
@@ -706,7 +760,8 @@ def run(config, experiment='resnet'):
         ################################
         ### Train and test on task j ###
         ################################
-        train(j, data, mnet, hnet, device, config, shared, writer, logger)
+        guide_emb = train(j, data, mnet, hnet, device, config, shared, writer, logger, start_generate=config.start_generate)
+        guide_embs.append(guide_emb.detach())
 
         ### Final test run.
         if hnet is not None:
@@ -748,6 +803,9 @@ def run(config, experiment='resnet'):
 
     ### Write final summary.
     shared.summary['finished'] = 1
+    shared.summary['guide_embs'] = torch.stack(guide_embs)
+    shared.summary['final_embs'] = torch.stack([hnet.get_task_emb(i).detach() for i in range(config.num_tasks)])
+    
     tutils.save_summary_dict(config, shared, experiment)
     # save hnet
     if hnet is not None:

@@ -408,7 +408,7 @@ class BatchNormLayer(nn.Module):
                 raise ValueError('Parameter "stats_id" is not defined but ' +
                                  'multiple running stats are available.')
             elif self._track_running_stats:
-                if stats_id is None:
+                if stats_id is None or not stats_id < self.num_stats:
                     stats_id = 0
                 assert(stats_id < self.num_stats)
 
@@ -500,7 +500,7 @@ class BatchNormLayer(nn.Module):
             - **running_mean**
             - **running_var**
         """
-        if stats_id is None:
+        if stats_id is None or not stats_id < self.num_stats:
             stats_id = self.num_stats - 1
         assert(stats_id < self.num_stats)
 

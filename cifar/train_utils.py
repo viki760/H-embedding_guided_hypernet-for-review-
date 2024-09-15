@@ -330,7 +330,7 @@ def save_summary_dict(config, shared, experiment):
             elif isinstance(v, float):
                 f.write('%s %f\n' % (k, v))
             else:
-                f.write('%s %d\n' % (k, v))
+                f.write('%s %s\n' % (k, str(v)))
 
 if __name__ == '__main__':
     pass
