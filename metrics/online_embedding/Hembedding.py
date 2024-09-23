@@ -3,12 +3,20 @@ import torch.optim as optim
 import sys
 sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/metrics/online_embedding/')
 from torch.utils.tensorboard import SummaryWriter
+import gc
 
 def get_Hembedding(config, cur_data, pre_embs, hnet, mnet, device, tensorboard = False, writer = None):
     if tensorboard:
         assert writer is not None
     # get_Hscore(hnet.forward(task_emb=pre_embs[0]), mnet, cur_data)
-    cur_dist = [get_Hscore(hnet.forward(task_emb=emb), mnet, cur_data) for emb in pre_embs]
+    cur_dist = []
+    for emb in pre_embs:
+        with torch.no_grad():
+            hscore = get_Hscore(hnet.forward(task_emb=emb), mnet, cur_data)
+        gc.collect()
+        torch.cuda.empty_cache()
+        cur_dist.append(hscore)
+    # cur_dist = [get_Hscore(hnet.forward(task_emb=emb), mnet, cur_data) for emb in pre_embs]
     
     border1 = min(cur_dist)
     border2 = max(cur_dist)

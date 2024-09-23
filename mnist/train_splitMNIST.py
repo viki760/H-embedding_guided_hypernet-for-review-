@@ -629,7 +629,6 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
         hnet_reg_batch_size = config.hnet_reg_batch_size
     else:
         hnet_reg_batch_size = None
-    
     #! emb_reg preparation
     if emb_reg:
         emb_data_np = dhandler_class.next_train_batch(config.emb_data_size)
@@ -640,10 +639,12 @@ def train_class_one_t(dhandler_class, dhandlers_rp, dec, d_hnet, net,
             #* default, only emplemented Hembedding
             prev_emb = torch.stack([net_hnet.get_task_emb(i).detach() for i in range(t)])
             guide_emb = Hemb.get_Hembedding(config, cur_data=emb_data, pre_embs=prev_emb, hnet=net_hnet, mnet=net, device=device, tensorboard=False)
+        elif config.emb_metric == 'random':
+            guide_emb = torch.randn(config.temb_size).to(device)
 
         hidden_dim = net_hnet.get_hidden_dim()
         print('Hidden dim for task %d: %s' % (t, str(net_hnet.get_hidden_dim(size_only=False))))
-        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.rp_temb_size).to(device)
+        decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.temb_size).to(device)
         decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.emb_lr)
 
     for i in range(training_iterations):
