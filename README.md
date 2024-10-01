@@ -12,7 +12,8 @@ $ conda activate hypercl_env
 
 ## Run experiment for Cifar10/100
 
-- Our method:  
+- Our method:
+  
   Simply run the `run_resnet.sh` file under the cifar directory. The arguments are now set to conform with the results in paper, you may modify them as you wish.
 
 - Baselines:
