@@ -44,7 +44,7 @@ if __name__ == "__main__":
     from datetime import datetime
     from torch.utils.tensorboard import SummaryWriter
     
-    DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
+    DATA_DIR_CIFAR = r"/path/to/data/"
 
     ### Load datasets (i.e., create tasks).
     # Container for variables shared across function.
