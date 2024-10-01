@@ -56,8 +56,7 @@ if __name__ == "__main__":
     dhandlers = tutils.load_datasets(config, shared, logger,
                                      data_dir=DATA_DIR_CIFAR)
     
-    # weights_path = "/mnt/d/task/research/codes/HyperNet/hypercl/cifar/results/resnet_cifar/2021-09-29_15-00-00/weights/weights_0.pt"
-
+  
     mnet = tutils.get_main_model(config, shared, logger, device, no_weights=not config.mnet_only)
     hnet = tutils.get_hnet_model(config, mnet, logger, device)
     # with previous hnet weight

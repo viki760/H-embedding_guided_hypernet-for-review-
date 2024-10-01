@@ -1,31 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2019 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# @title          :utils/sim_utils.py
-# @author         :ch
-# @contact        :henningc@ethz.ch
-# @created        :12/12/2019
-# @version        :1.0
-# @python_version :3.6.8
-"""
-General helper functions for simulations
-----------------------------------------
 
-The module :mod:`utils.sim_utils` comprises a bunch of functions that are in
-general useful for writing simulations in this repository.
-"""
 import torch
 import tensorboardX
 from tensorboardX import SummaryWriter
@@ -43,8 +16,8 @@ from cifar.sa_hyper_model import SAHyperNetwork
 from mnets.mlp import MLP
 from mnets.resnet import ResNet
 from mnets.zenkenet import ZenkeNet
-from mnist.chunked_hyper_model import ChunkedHyperNetworkHandler
-from toy_example.hyper_model import HyperNetwork
+from utils.chunked_hyper_model import ChunkedHyperNetworkHandler
+from utils.hyper_model import HyperNetwork
 from utils import logger_config
 from utils import misc
 

@@ -1,34 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2019 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# @title           :classifier/train_utils.py
-# @author          :ch, jvo
-# @contact         :henningc@ethz.ch
-# @created         :02/26/2019
-# @version         :1.0
-# @python_version  :3.6.6
-"""
-Helper functions for training CIFAR experiments via deterministic CL
---------------------------------------------------------------------
 
-The module :mod:`cifar.train_utils` contains a collection of helper methods for
-the module :mod:`cifar.train`. The reason why these nethods are outsourced to
-this module is simply to improve readibility of the module :mod:`cifar.train`.
-The methods collected here are typically not required to understand the
-underlying logic of the training process.
-"""
 import os
 import torch
 

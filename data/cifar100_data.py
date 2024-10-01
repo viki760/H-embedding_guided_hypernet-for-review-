@@ -1,39 +1,3 @@
-#!/usr/bin/env python3
-# Copyright 2019 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# @title           :data/cifar100_data.py
-# @author          :ch
-# @contact         :henningc@ethz.ch
-# @created         :05/02/2019
-# @version         :1.0
-# @python_version  :3.6.8
-"""
-CIFAR-100 Dataset
------------------
-
-The module :mod:`data.cifar100_data` contains a handler for the CIFAR 100
-dataset.
-
-The dataset consists of 60000 32x32 colour images in 100 classes, with 600
-images per class. There are 50000 training images and 10000 test images.
-
-Information about the dataset can be retrieved from:
-    https://www.cs.toronto.edu/~kriz/cifar.html
-"""
-# FIXME: The content of this module is mostly a copy of the module
-# 'cifar10_data'. These two should be merged in future.
 
 import os
 import numpy as np

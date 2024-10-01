@@ -1,24 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2018 Cheonbok Park
-"""
-@title           :utils/self_attention_layer.py
-@author          :ch
-@contact         :henningc@ethz.ch
-@created         :02/21/2019
-@version         :1.0
-@python_version  :3.6.6
 
-This function was copied from 
-
-    https://github.com/heykeetae/Self-Attention-GAN/blob/master/sagan_models.py
-
-It was written by Cheonbok Park. Unfortunately, no license was visibly
-provided with this code.
-
-Note, that we use this code WITHOUT ANY WARRANTIES.
-
-The code was slightly modified to fit our purposes.
-"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

@@ -1,39 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2018 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# @title           :chunked_hyper_model.py
-# @author          :ch
-# @contact         :henningc@ethz.ch
-# @created         :10/25/2018
-# @version         :1.0
-# @python_version  :3.6.6
-"""
-Chunked Hypernetwork
---------------------
 
-Implements a hypernetwork that generates the weights for a main network.
-The hypernetwork is implement such that it can operate in a compresive regime,
-i.e., a regime where the total number of weights in the hypernet (including
-embeddings) is smaller than the number of weights in the main network.
-
-Therefore, the weights of the main network are split into equally sized chunks.
-The hypernetwork produces one chunk at a time using a (learned) chunk-specific
-embedding. If the embedding size is small compared to the chunk size and the
-hypernetwork itself has some reasonalbe size, then weight compression can be
-easily achieved.
-"""
 import torch
 import torch.nn as nn
 import math
@@ -41,13 +6,13 @@ import numpy as np
 from warnings import warn
 
 from mnets.mnet_interface import MainNetInterface
-from toy_example.hyper_model import HyperNetwork
+from utils.hyper_model import HyperNetwork
 from utils import init_utils as iutils
 from utils.module_wrappers import CLHyperNetInterface
 
 class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
     """This class handles an instance of the class
-    :class:`toy_example.hyper_model.HyperNetwork` to produce the weights of a
+    :class:`utils.hyper_model.HyperNetwork` to produce the weights of a
     main network. I.e., it generates one instance of a full hypernetwork (that
     will produce only one chunk rather than all main net weights) and handles
     all the embedding vectors. Additionally, it provides an easy interface to
@@ -70,7 +35,7 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
 
     Args:
         (....): See constructor arguments of class
-            :class:`toy_example.hyper_model.HyperNetwork`.
+            :class:`utils.hyper_model.HyperNetwork`.
         chunk_dim (int): The chunk size, i.e, the number of weights produced by
             single the internally maintained instance of a full hypernet.
         ce_dim (int): The size of the chunk embeddings.
@@ -299,7 +264,7 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
         Inspired by the method
         `Hyperfan Init <https://openreview.net/forum?id=H1lma24tPB>`__ which we
         implemented for the full hypernetwork in method
-        :meth:`toy_example.hyper_model.HyperNetwork.apply_hyperfan_init`, we
+        :meth:`utils.hyper_model.HyperNetwork.apply_hyperfan_init`, we
         heuristically developed a better initialization method for chunked
         hypernetworks.
 
@@ -318,7 +283,7 @@ class ChunkedHyperNetworkHandler(nn.Module, CLHyperNetInterface):
         for all chunks. Then, assuming the hypernetwork was initialized via
         fan-in init, the variance of the hypernetwork output :math:`\mathbf{v}`
         can be written as follows (see documentation of method
-        :meth:`toy_example.hyper_model.HyperNetwork.apply_hyperfan_init`):
+        :meth:`utils.hyper_model.HyperNetwork.apply_hyperfan_init`):
 
         .. math::
 

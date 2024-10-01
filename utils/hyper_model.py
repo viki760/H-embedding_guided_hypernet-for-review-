@@ -1,46 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2018 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""
-@title           :toy_example/hyper_model.py
-@author          :ch
-@contact         :henningc@ethz.ch
-@created         :10/23/2018
-@version         :1.0
-@python_version  :3.6.6
 
-Implementation of a hypernet, that outputs weights for a main network.
-
-This hypernetwork is implemented such that it can be cascaded (i.e., a
-hypernetwork can produce the weights of another instance of a hypernetwork).
-Note, if one wants to enrich this implementation by adding spectral
-normalization (which can only be used for a hypernetwork that has trainable
-weights), one would have to prodvide two distinct implementations:
-
-    - `no_weights` is True: No spectral normalization is used and the
-      hypernetwork can be implemented as shown here.
-    - "no_weights" is False and spectral normalization is used:
-      The hypernetwork needs consist of a set of modules rather than a set of
-      parameters of modules (which can then passed to methods from
-      nn.functional). E.g., in the constructor of the linear hypernetwork we
-      have to create instances of nn.Linear:
-      :code:`nn.utils.spectral_norm(nn.Linear(n, m))`
-      Though, if one wants to keep the possibility of easily adding parameters
-      (see argument "dTheta" of forward method), one should continue using the
-      methods provided in nn.functional and instead find a way to wrap
-      parameters inside modules that fulfill no other purpose.
-"""
 import math
 import numpy as np
 import torch

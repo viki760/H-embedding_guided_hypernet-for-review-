@@ -1,42 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2019 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""
-@title           :utils/cli_args.py
-@author          :ch
-@contact         :henningc@ethz.ch
-@created         :08/21/2019
-@version         :1.0
-@python_version  :3.6.8
 
-This file has a collection of helper methods that can be used to specify
-command-line arguments. In particular, arguments that are necessary for
-multiple experiments (even though with different default values) should be
-specified here, such that we do not define arguments (and their help texts)
-multiple times.
-
-All methods specified here are helper methods for a method (that we call
-usually) `parse_cmd_arguments`. See :mod:`cifar.train_args`
-for an example.
-
-Important note for contributors
-###############################
-
-**DO NEVER CHANGE DEFAULT VALUES.** Instead, add a keyword argument to the
-corresponding method, that allows you to change the default value, when you
-call the method.
-"""
 from datetime import datetime
 from warnings import warn
 

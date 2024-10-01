@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
 
-"""
-Training of a deterministic CL hypernetwork on CIFAR-10/100
------------------------------------------------------------
-
-The module :mod:`cifar.train` implements the training of a deterministic
-hypernet to solve a CIFAR continual learning problem.
-
-.. note::
-    The module is not executable! Please refer to :mod:`cifar.train_resnet` or
-    :mod:`cifar.train_zenke`.
-"""
 import sys
 sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/')
 
@@ -200,8 +189,6 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
     ### Optimizer ###
     #################
     # Define the optimizers used to train main network and hypernet.
-    #TODO: check the forward of Hnet class
-    #! TODO: add decoder for hidden space
     #* Add all previous task embedding to parameters but only get emb optimizer for current embedding
     mnet.train()
     if hnet is not None:
@@ -316,7 +303,7 @@ def train(task_id, data, mnet, hnet, device, config, shared, writer, logger):
             guide_emb = torch.randn(config.temb_size).to(device)
 
         hidden_dim = hnet.get_hidden_dim()
-        logger.info('Hidden dim for task %d: %s' % (task_id, str(hnet.get_hidden_dim(size_only=False))))
+        logger.info('Hidden dim for task %d: %s' % (task_id+1, str(hnet.get_hidden_dim(size_only=False))))
         decoder = EmbDecoder(hidden_dim=hidden_dim, emb_dim=config.temb_size).to(device)
         decoder_optimizer = optim.Adam(decoder.parameters(), lr=config.emb_lr)
         

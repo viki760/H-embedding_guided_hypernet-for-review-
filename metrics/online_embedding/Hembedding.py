@@ -57,7 +57,7 @@ def get_Hembedding(config, cur_data, pre_embs, hnet, mnet, device, tensorboard =
                 writer.add_scalar(f"task_{task_id}\Dist_scaling",dist_scaling.item(),i)
                 writer.add_histogram(f"task_{task_id}\Cur_emb",cur_emb,i)
         
-    print('Finished optimization for task',len(pre_embs))
+    print('Finished optimization for task',len(pre_embs)+1)
     print(f"Final Loss: {loss.item()}, Dist_scaling: {dist_scaling.item()}")
     print("Cur_emb:",cur_emb)
     return cur_emb.detach()    

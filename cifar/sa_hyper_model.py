@@ -1,45 +1,4 @@
-#!/usr/bin/env python3
-# Copyright 2019 Christian Henning
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# @title           :cifar/sa_hyper_model.py
-# @author          :ch
-# @contact         :henningc@ethz.ch
-# @created         :02/21/2019
-# @version         :1.0
-# @python_version  :3.6.6
-"""
-Convolutional hypernetwork with self-attention layers
------------------------------------------------------
 
-The module :mod:`cifar.sa_hyper_model` implements a hypernetwork that uses
-transpose convolutions (like the generator of a GAN) to generate weights.
-Though, as convolutions usually suffer from only capturing local correlations
-sufficiently, we incorporate the self-attention mechanism developed by
-
-    Zhang et al., "Self-Attention Generative Adversarial Networks", 2018,
-    https://arxiv.org/abs/1805.08318
-
-See :class:`utils.self_attention_layer.SelfAttnLayerV2` for details on this
-layer type.
-
-.. note::
-    This module has been temporarily moved to this location from the deprecated
-    package ``classifier``. Once a new hypernetwork interface has been designed,
-    all hypernets (including this one) will be moved to the subpackage
-    ``hnets``.
-"""
 import numpy as np
 import torch
 import torch.nn as nn
