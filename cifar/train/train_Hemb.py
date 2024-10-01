@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/')
 
 from argparse import Namespace
 import torch
@@ -20,7 +18,7 @@ from metrics.online_embedding import Hembedding as Hemb
 from train.fc_decoder import EmbDecoder
 
 
-DATA_DIR_CIFAR = r"/mnt/d/task/research/codes/MultiSource/wsl/2/multi-source/data/"
+DATA_DIR_CIFAR = r"/path/to/cifar/data/"
 
 def test(task_id, data, mnet, hnet, device, shared, config, writer, logger,
          train_iter=None, task_emb=None, cl_scenario=1, test_size=None):

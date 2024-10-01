@@ -35,7 +35,7 @@ def get_embedding(config, metric, dhandlers, hnet, mnet, device, n_sample=1000, 
 
 if __name__ == "__main__":
     import sys
-    sys.path.append("/mnt/d/task/research/codes/HyperNet/hypercl/")
+    sys.path.append("/path/to/working/directory/")
 
     from cifar import train_utils as tutils
     from cifar import train_args

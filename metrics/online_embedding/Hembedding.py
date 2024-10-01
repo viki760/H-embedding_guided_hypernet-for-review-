@@ -1,7 +1,7 @@
 import torch
 import torch.optim as optim
 import sys
-sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/metrics/online_embedding/')
+sys.path.append('/path/to/working/directory/metrics/online_embedding/')
 from torch.utils.tensorboard import SummaryWriter
 import gc
 

@@ -2,7 +2,7 @@
 import __init__ # pylint: disable=unused-import
 import sys
 import os
-sys.path.append('/mnt/d/task/research/codes/HyperNet/hypercl/')
+sys.path.append('/path/to/working/directory/')
 from cifar import train_args
 from cifar.train import train_Hemb as train_func
 import torch
